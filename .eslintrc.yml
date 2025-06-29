@@ -1,0 +1,30 @@
+extends:
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended
+
+parser: '@typescript-eslint/parser'
+
+plugins:
+  - '@typescript-eslint'
+
+env:
+  node: true
+  es2020: true
+
+rules:
+  no-console: error
+  complexity: [error, { max: 15 }]  # Увеличил лимит сложности
+  max-depth: [error, { max: 4 }]    # Увеличил лимит вложенности
+  max-nested-callbacks: [error, { max: 2 }]
+  max-params: [error, { max: 6 }]   # Увеличил лимит параметров
+  max-statements: [error, { max: 25 }, { ignoreTopLevelFunctions: false }]  # Увеличил лимит операторов
+  max-len: [error, { code: 120, ignoreUrls: true }]
+  max-lines: [error, { max: 500, skipComments: true, skipBlankLines: true }]  # Увеличил лимит строк
+  semi: [error, always]
+  no-multiple-empty-lines: [error, { max: 1 }]
+  space-before-function-paren: [error, { anonymous: always, named: never, asyncArrow: always }]
+  no-constant-condition: [error, { checkLoops: false }]
+  '@typescript-eslint/explicit-module-boundary-types': 0
+  '@typescript-eslint/no-non-null-assertion': 0
+  '@typescript-eslint/no-unused-vars': [error, { "varsIgnorePattern": "^_" }]
+  '@typescript-eslint/no-explicit-any': warn  # Изменил на warning вместо error

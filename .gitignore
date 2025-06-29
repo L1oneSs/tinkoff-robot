@@ -1,0 +1,16 @@
+.DS_Store
+.vscode
+
+# npm
+node_modules
+npm-debug.log
+
+# env
+.env*
+README.md
+
+dist
+/.cache
+/todo.txt
+/scripts/run-tuner.ts
+/chart/index.js
