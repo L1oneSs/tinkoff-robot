@@ -48,11 +48,11 @@ export class AoSignal extends Signal<AoSignalConfig> {
 
     // Пересечение нулевой линии
     if (crossover(aoValues, zeroLine)) {
-      this.logger.warn(`AO пересек нулевую линию снизу вверх, покупаем`);
+      this.logger.warn(`AO пересек нулевую линию снизу вверх, необходима покупка`);
       return "buy";
     }
     if (crossunder(aoValues, zeroLine) && profit > 0) {
-      this.logger.warn(`AO пересек нулевую линию сверху вниз, продаем`);
+      this.logger.warn(`AO пересек нулевую линию сверху вниз, необходима продажа`);
       return "sell";
     }
 
@@ -64,13 +64,13 @@ export class AoSignal extends Signal<AoSignalConfig> {
 
       // Смена с красного на зеленый (восходящий импульс)
       if (current > prev && prev <= prevPrev && current > 0) {
-        this.logger.warn(`AO: смена цвета на зеленый выше нуля, покупаем`);
+        this.logger.warn(`AO: смена цвета на зеленый выше нуля, необходима покупка`);
         return "buy";
       }
 
       // Смена с зеленого на красный (нисходящий импульс)
       if (current < prev && prev >= prevPrev && current < 0 && profit > 0) {
-        this.logger.warn(`AO: смена цвета на красный ниже нуля, продаем`);
+        this.logger.warn(`AO: смена цвета на красный ниже нуля, необходима продажа`);
         return "sell";
       }
     }

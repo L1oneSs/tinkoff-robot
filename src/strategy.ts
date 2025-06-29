@@ -13,6 +13,7 @@ import { RobotModule } from './utils/robot-module.js';
 import { LimitOrderReq } from './account/orders.js';
 import { Robot } from './robot.js';
 import { ProfitLossSignal, ProfitLossSignalConfig } from './signals/profit-loss.js';
+import { getNewInstrumentConfig } from './instrument-configs.js';
 import { FigiInstrument } from './figi.js';
 import { OrderDirection } from 'tinkoff-invest-api/dist/generated/orders.js';
 import { Logger } from '@vitalets/logger';
@@ -174,9 +175,19 @@ export class Strategy extends RobotModule {
 
   /**
    * Расчет сигнала к покупке или продаже.
-   * Комбинирует сигналы от всех активных индикаторов.
+   * Использует новую логику триггеров.
    */
   protected calcSignal() {
+    // Проверяем, использует ли стратегия новые триггеры
+    const newConfig = this.getNewConfig();
+    if (newConfig?.triggers?.buySignal || newConfig?.triggers?.sellSignal) {
+      // Используем новую логику триггеров
+      if (this.shouldBuyWithTriggers()) return 'buy';
+      if (this.shouldSellWithTriggers()) return 'sell';
+      return null;
+    }
+    
+    // Fallback на старую логику для инструментов без триггеров
     const signalParams = { candles: this.instrument.candles, profit: this.currentProfit };
     const signals = this.calculateAllSignals(signalParams);
     this.logSignals(signals);
@@ -281,7 +292,7 @@ export class Strategy extends RobotModule {
     const orderReq: LimitOrderReq = {
       figi: this.config.figi,
       direction: OrderDirection.ORDER_DIRECTION_SELL,
-      quantity: availableLots, // продаем все, что есть
+      quantity: availableLots, // необходима продажа все, что есть
       price: this.api.helpers.toQuotation(currentPrice),
     };
 
@@ -367,8 +378,6 @@ export class Strategy extends RobotModule {
    * Получить новую конфигурацию с триггерами
    */
   getNewConfig() {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { getNewInstrumentConfig } = require('./instrument-configs.js');
     return getNewInstrumentConfig(this.config.figi);
   }
 
@@ -524,43 +533,17 @@ export class Strategy extends RobotModule {
    * Получить список активных сигналов
    */
   private getActiveSignals(): string[] {
-    const signalParams = { candles: this.instrument.candles, profit: this.currentProfit };
+    // Используем уже вычисленные состояния сигналов для консистентности
+    const signalStates = this.getSignalStates();
     const signals: string[] = [];
     
-    // Основные сигналы
-    this.addActiveBasicSignals(signals, signalParams);
-    
-    // Осцилляторы
-    this.addActiveOscillatorSignals(signals, signalParams);
-    
-    // Трендовые и импульсные сигналы
-    this.addActiveTrendAndMomentumSignals(signals, signalParams);
+    // Добавляем все активные сигналы на основе их состояний
+    Object.entries(signalStates).forEach(([signalName, isActive]) => {
+      if (isActive) {
+        signals.push(signalName);
+      }
+    });
     
     return signals.length > 0 ? signals : ['manual'];
-  }
-
-  private addActiveBasicSignals(signals: string[], signalParams: any) {
-    if (this.profitSignal?.calc(signalParams)) signals.push('profit');
-    if (this.smaSignal?.calc(signalParams)) signals.push('sma');
-    if (this.rsiSignal?.calc(signalParams)) signals.push('rsi');
-    if (this.bollingerSignal?.calc(signalParams)) signals.push('bollinger');
-    if (this.macdSignal?.calc(signalParams)) signals.push('macd');
-    if (this.emaSignal?.calc(signalParams)) signals.push('ema');
-  }
-
-  private addActiveOscillatorSignals(signals: string[], signalParams: any) {
-    if (this.acSignal?.calc(signalParams)) signals.push('ac');
-    if (this.aoSignal?.calc(signalParams)) signals.push('ao');
-    if (this.cciSignal?.calc(signalParams)) signals.push('cci');
-    if (this.stochasticSignal?.calc(signalParams)) signals.push('stochastic');
-    if (this.williamsSignal?.calc(signalParams)) signals.push('williams');
-  }
-
-  private addActiveTrendAndMomentumSignals(signals: string[], signalParams: any) {
-    if (this.adxSignal?.calc(signalParams)) signals.push('adx');
-    if (this.psarSignal?.calc(signalParams)) signals.push('psar');
-    if (this.supertrendSignal?.calc(signalParams)) signals.push('supertrend');
-    if (this.moveSignal?.calc(signalParams)) signals.push('move');
-    if (this.rocSignal?.calc(signalParams)) signals.push('roc');
   }
 }

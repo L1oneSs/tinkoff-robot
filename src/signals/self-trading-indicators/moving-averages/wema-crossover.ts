@@ -40,13 +40,13 @@ export class WemaCrossoverSignal extends Signal<WemaCrossoverSignalConfig> {
 
     if (crossover(fastWema, slowWema)) {
       this.logger.warn(
-        `WEMA: быстрое пересекло медленное снизу вверх, покупаем`,
+        `WEMA: быстрое пересекло медленное снизу вверх, необходима покупка`,
       );
       return "buy";
     }
     if (crossunder(fastWema, slowWema) && profit > 0) {
       this.logger.warn(
-        `WEMA: быстрое пересекло медленное сверху вниз, продаем`,
+        `WEMA: быстрое пересекло медленное сверху вниз, необходима продажа`,
       );
       return "sell";
     }

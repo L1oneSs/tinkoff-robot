@@ -58,13 +58,13 @@ export class PSARSignal extends Signal<PSARSignalConfig> {
     
     // Смена направления с нисходящего на восходящий
     if (!previousTrendUp && currentTrendUp) {
-      this.logger.warn(`PSAR сменил направление на восходящий тренд при цене ${currentPrice.toFixed(2)}, покупаем`);
+      this.logger.warn(`PSAR сменил направление на восходящий тренд при цене ${currentPrice.toFixed(2)}, необходима покупка`);
       return 'buy';
     }
     
     // Смена направления с восходящего на нисходящий
     if (previousTrendUp && !currentTrendUp && profit > 0) {
-      this.logger.warn(`PSAR сменил направление на нисходящий тренд при цене ${currentPrice.toFixed(2)}, продаем`);
+      this.logger.warn(`PSAR сменил направление на нисходящий тренд при цене ${currentPrice.toFixed(2)}, необходима продажа`);
       return 'sell';
     }
     
@@ -73,7 +73,7 @@ export class PSARSignal extends Signal<PSARSignalConfig> {
     if (prevPrice <= previousPsar && currentPrice > currentPsar) {
       this.logger.warn(
         `Цена пробила PSAR снизу вверх (${currentPrice.toFixed(2)} > ${currentPsar.toFixed(2)}), ` +
-        `начало восходящего тренда, покупаем`
+        `начало восходящего тренда, необходима покупка`
       );
       return 'buy';
     }
@@ -82,7 +82,7 @@ export class PSARSignal extends Signal<PSARSignalConfig> {
     if (prevPrice >= previousPsar && currentPrice < currentPsar && profit > 0) {
       this.logger.warn(
         `Цена пробила PSAR сверху вниз (${currentPrice.toFixed(2)} < ${currentPsar.toFixed(2)}), ` +
-        `начало нисходящего тренда, продаем`
+        `начало нисходящего тренда, необходима продажа`
       );
       return 'sell';
     }

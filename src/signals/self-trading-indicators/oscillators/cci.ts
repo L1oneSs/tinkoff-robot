@@ -52,13 +52,13 @@ export class CciSignal extends Signal<CciSignalConfig> {
     
     // Пересечение снизу нижнего уровня - сигнал на покупку
     if (crossover(cciValues, lowerLine)) {
-      this.logger.warn(`CCI пересек уровень ${lowerLevel} снизу вверх, разворот вверх, покупаем`);
+      this.logger.warn(`CCI пересек уровень ${lowerLevel} снизу вверх, разворот вверх, необходима покупка`);
       return 'buy';
     }
     
     // Пересечение сверху верхнего уровня - сигнал на продажу
     if (crossunder(cciValues, upperLine) && profit > 0) {
-      this.logger.warn(`CCI пересек уровень ${upperLevel} сверху вниз, разворот вниз, продаем`);
+      this.logger.warn(`CCI пересек уровень ${upperLevel} сверху вниз, разворот вниз, необходима продажа`);
       return 'sell';
     }
   }

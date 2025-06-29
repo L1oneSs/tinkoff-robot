@@ -80,19 +80,19 @@ export class AdxSignal extends Signal<AdxSignalConfig> {
     
     // Сильный тренд вверх начинается
     if (currentAdx > trendStrengthLevel && isTrendStrengthening && isUptrend) {
-      this.logger.warn(`ADX ${currentAdx.toFixed(2)} показывает усиление восходящего тренда, покупаем`);
+      this.logger.warn(`ADX ${currentAdx.toFixed(2)} показывает усиление восходящего тренда, необходима покупка`);
       return 'buy';
     }
     
     // Сильный тренд вниз или ослабление тренда
     if (currentAdx > trendStrengthLevel && isTrendStrengthening && !isUptrend && profit > 0) {
-      this.logger.warn(`ADX ${currentAdx.toFixed(2)} показывает усиление нисходящего тренда, продаем`);
+      this.logger.warn(`ADX ${currentAdx.toFixed(2)} показывает усиление нисходящего тренда, необходима продажа`);
       return 'sell';
     }
     
     // Очень сильный тренд - возможна коррекция
     if (currentAdx > strongTrendLevel && !isTrendStrengthening && profit > 0) {
-      this.logger.warn(`ADX ${currentAdx.toFixed(2)} достиг максимума и начал снижаться, возможна коррекция, продаем`);
+      this.logger.warn(`ADX ${currentAdx.toFixed(2)} достиг максимума и начал снижаться, возможна коррекция, необходима продажа`);
       return 'sell';
     }
   }

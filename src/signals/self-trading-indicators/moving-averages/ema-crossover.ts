@@ -37,12 +37,12 @@ export class EmaCrossoverSignal extends Signal<EmaCrossoverSignalConfig> {
 
     if (crossover(fastEma, slowEma)) {
       this.logger.warn(
-        `EMA: быстрая пересекла медленную снизу вверх, покупаем`,
+        `EMA: быстрая пересекла медленную снизу вверх, необходима покупка`,
       );
       return "buy";
     }
     if (crossunder(fastEma, slowEma) && profit > 0) {
-      this.logger.warn(`EMA: быстрая пересекла медленную сверху вниз, продаем`);
+      this.logger.warn(`EMA: быстрая пересекла медленную сверху вниз, необходима продажа`);
       return "sell";
     }
   }

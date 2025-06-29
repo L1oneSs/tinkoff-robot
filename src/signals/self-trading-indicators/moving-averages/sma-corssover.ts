@@ -40,11 +40,11 @@ export class SmaCrossoverSignal extends Signal<SmaCrossoverSignalConfig> {
     this.plot('slowMa', slowMa, candles);
 
     if (crossover(fastMa, slowMa)) {
-      this.logger.warn(`Цена начала расти, покупаем`);
+      this.logger.warn(`Цена начала расти, необходима покупка`);
       return 'buy';
     }
     if (crossunder(fastMa, slowMa) && profit > 0) {
-      this.logger.warn(`Цена начала падать, продаем`);
+      this.logger.warn(`Цена начала падать, необходима продажа`);
       return 'sell';
     }
   }

@@ -52,13 +52,13 @@ export class AcSignal extends Signal<AcSignalConfig> {
     // Пересечение нулевой линии
     if (crossover(acValues, zeroLine)) {
       this.logger.warn(
-        `AC пересек нулевую линию снизу вверх, ускорение вверх, покупаем`,
+        `AC пересек нулевую линию снизу вверх, ускорение вверх, необходима покупка`,
       );
       return "buy";
     }
     if (crossunder(acValues, zeroLine) && profit > 0) {
       this.logger.warn(
-        `AC пересек нулевую линию сверху вниз, ускорение вниз, продаем`,
+        `AC пересек нулевую линию сверху вниз, ускорение вниз, необходима продажа`,
       );
       return "sell";
     }
@@ -92,7 +92,7 @@ export class AcSignal extends Signal<AcSignalConfig> {
       // Смена с красного на зеленый (начало ускорения вверх)
       if (current > prev && redBars >= this.config.confirmBars - 1) {
         this.logger.warn(
-          `AC: смена на зеленый после ${redBars} красных столбцов, ускорение вверх, покупаем`,
+          `AC: смена на зеленый после ${redBars} красных столбцов, ускорение вверх, необходима покупка`,
         );
         return "buy";
       }
@@ -104,7 +104,7 @@ export class AcSignal extends Signal<AcSignalConfig> {
         profit > 0
       ) {
         this.logger.warn(
-          `AC: смена на красный после ${greenBars} зеленых столбцов, ускорение вниз, продаем`,
+          `AC: смена на красный после ${greenBars} зеленых столбцов, ускорение вниз, необходима продажа`,
         );
         return "sell";
       }

@@ -55,11 +55,11 @@ export class MacdSignal extends Signal<MacdSignalConfig> {
     this.plot("signal", signalLine, candles);
 
     if (crossover(macdLine, signalLine)) {
-      this.logger.warn(`MACD пересек сигнальную линию снизу вверх, покупаем`);
+      this.logger.warn(`MACD пересек сигнальную линию снизу вверх, необходима покупка`);
       return "buy";
     }
     if (crossunder(macdLine, signalLine) && profit > 0) {
-      this.logger.warn(`MACD пересек сигнальную линию сверху вниз, продаем`);
+      this.logger.warn(`MACD пересек сигнальную линию сверху вниз, необходима продажа`);
       return "sell";
     }
   }

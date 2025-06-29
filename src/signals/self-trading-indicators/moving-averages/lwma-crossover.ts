@@ -40,13 +40,13 @@ export class LwmaCrossoverSignal extends Signal<LwmaCrossoverSignalConfig> {
 
     if (crossover(fastLwma, slowLwma)) {
       this.logger.warn(
-        `LWMA: быстрое пересекло медленное снизу вверх, покупаем`,
+        `LWMA: быстрое пересекло медленное снизу вверх, необходима покупка`,
       );
       return "buy";
     }
     if (crossunder(fastLwma, slowLwma) && profit > 0) {
       this.logger.warn(
-        `LWMA: быстрое пересекло медленное сверху вниз, продаем`,
+        `LWMA: быстрое пересекло медленное сверху вниз, необходима продажа`,
       );
       return "sell";
     }

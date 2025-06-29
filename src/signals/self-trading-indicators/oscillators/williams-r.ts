@@ -42,13 +42,13 @@ export class WilliamsRSignal extends Signal<WilliamsRSignalConfig> {
     
     // Выход из зоны перепроданности - сигнал на покупку
     if (crossover(williamsValues, oversoldLine)) {
-      this.logger.warn(`Williams %R вышел из зоны перепроданности (выше ${oversoldLevel}), покупаем`);
+      this.logger.warn(`Williams %R вышел из зоны перепроданности (выше ${oversoldLevel}), необходима покупка`);
       return 'buy';
     }
     
     // Вход в зону перекупленности - сигнал на продажу
     if (crossunder(williamsValues, overboughtLine) && profit > 0) {
-      this.logger.warn(`Williams %R вошел в зону перекупленности (ниже ${overboughtLevel}), продаем`);
+      this.logger.warn(`Williams %R вошел в зону перекупленности (ниже ${overboughtLevel}), необходима продажа`);
       return 'sell';
     }
     
@@ -59,7 +59,7 @@ export class WilliamsRSignal extends Signal<WilliamsRSignalConfig> {
     if (currentWilliams <= -95) {
       this.logger.warn(
         `Williams %R показывает экстремальную перепроданность (${currentWilliams.toFixed(1)}), ` +
-        `возможен отскок, покупаем`
+        `возможен отскок, необходима покупка`
       );
       return 'buy';
     }
@@ -68,7 +68,7 @@ export class WilliamsRSignal extends Signal<WilliamsRSignalConfig> {
     if (currentWilliams >= -5 && profit > 0) {
       this.logger.warn(
         `Williams %R показывает экстремальную перекупленность (${currentWilliams.toFixed(1)}), ` +
-        `возможна коррекция, продаем`
+        `возможна коррекция, необходима продажа`
       );
       return 'sell';
     }

@@ -52,7 +52,7 @@ export class MoveSignal extends Signal<MoveSignalConfig> {
       currentMove > this.config.filterLevel
     ) {
       this.logger.warn(
-        `Move пересек нулевую линию снизу вверх (${currentMove.toFixed(4)}), сильное движение вверх, покупаем`,
+        `Move пересек нулевую линию снизу вверх (${currentMove.toFixed(4)}), сильное движение вверх, необходима покупка`,
       );
       return "buy";
     }
@@ -62,7 +62,7 @@ export class MoveSignal extends Signal<MoveSignalConfig> {
       profit > 0
     ) {
       this.logger.warn(
-        `Move пересек нулевую линию сверху вниз (${currentMove.toFixed(4)}), сильное движение вниз, продаем`,
+        `Move пересек нулевую линию сверху вниз (${currentMove.toFixed(4)}), сильное движение вниз, необходима продажа`,
       );
       return "sell";
     }
@@ -70,13 +70,13 @@ export class MoveSignal extends Signal<MoveSignalConfig> {
     // Пересечение уровней фильтрации
     if (crossover(moveValues, upperFilter)) {
       this.logger.warn(
-        `Move пересек верхний уровень фильтрации (${currentMove.toFixed(4)}), сильный восходящий импульс, покупаем`,
+        `Move пересек верхний уровень фильтрации (${currentMove.toFixed(4)}), сильный восходящий импульс, необходима покупка`,
       );
       return "buy";
     }
     if (crossunder(moveValues, lowerFilter) && profit > 0) {
       this.logger.warn(
-        `Move пересек нижний уровень фильтрации (${currentMove.toFixed(4)}), сильный нисходящий импульс, продаем`,
+        `Move пересек нижний уровень фильтрации (${currentMove.toFixed(4)}), сильный нисходящий импульс, необходима продажа`,
       );
       return "sell";
     }
@@ -93,7 +93,7 @@ export class MoveSignal extends Signal<MoveSignalConfig> {
         currentMove > this.config.filterLevel
       ) {
         this.logger.warn(
-          `Move: резкий разворот от ${prevPrev.toFixed(4)} к ${currentMove.toFixed(4)}, покупаем`,
+          `Move: резкий разворот от ${prevPrev.toFixed(4)} к ${currentMove.toFixed(4)}, необходима покупка`,
         );
         return "buy";
       }
@@ -106,7 +106,7 @@ export class MoveSignal extends Signal<MoveSignalConfig> {
         profit > 0
       ) {
         this.logger.warn(
-          `Move: резкий разворот от ${prevPrev.toFixed(4)} к ${currentMove.toFixed(4)}, продаем`,
+          `Move: резкий разворот от ${prevPrev.toFixed(4)} к ${currentMove.toFixed(4)}, необходима продажа`,
         );
         return "sell";
       }

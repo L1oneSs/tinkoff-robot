@@ -40,13 +40,13 @@ export class EwmaCrossoverSignal extends Signal<EwmaCrossoverSignalConfig> {
 
     if (crossover(fastEwma, slowEwma)) {
       this.logger.warn(
-        `EWMA: быстрое пересекло медленное снизу вверх, покупаем`,
+        `EWMA: быстрое пересекло медленное снизу вверх, необходима покупка`,
       );
       return "buy";
     }
     if (crossunder(fastEwma, slowEwma) && profit > 0) {
       this.logger.warn(
-        `EWMA: быстрое пересекло медленное сверху вниз, продаем`,
+        `EWMA: быстрое пересекло медленное сверху вниз, необходима продажа`,
       );
       return "sell";
     }

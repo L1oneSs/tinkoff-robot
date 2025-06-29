@@ -7,9 +7,9 @@ import { Strategy } from '../strategy.js';
 import { Signal, SignalParams, SignalResult } from './base.js';
 
 const defaultConfig = {
-  /** При каком % превышении цены продаем актив, чтобы зафиксировать прибыль */
+  /** При каком % превышении цены необходима продажа актив, чтобы зафиксировать прибыль */
   takeProfit: 15,
-  /** При каком % снижении цены продаем актив, чтобы не потерять еще больше */
+  /** При каком % снижении цены необходима продажа актив, чтобы не потерять еще больше */
   stopLoss: 5,
 };
 
@@ -27,11 +27,11 @@ export class ProfitLossSignal extends Signal<ProfitLossSignalConfig> {
   calc({ profit }: SignalParams): SignalResult {
     const { takeProfit, stopLoss } = this.config;
     if (profit >= takeProfit) {
-      this.logger.warn(`Цена повысилась более чем на ${takeProfit}%, продаем`);
+      this.logger.warn(`Цена повысилась более чем на ${takeProfit}%, необходима продажа`);
       return 'sell';
     }
     if (profit <= -stopLoss) {
-      this.logger.warn(`Цена понизилась более чем на ${stopLoss}%, продаем`);
+      this.logger.warn(`Цена понизилась более чем на ${stopLoss}%, необходима продажа`);
       return 'sell';
     }
   }

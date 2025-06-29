@@ -35,6 +35,7 @@
     "chart.js": "^4.5.0",
     "node-telegram-bot-api": "^0.66.0",
     "tinkoff-invest-api": "^2.4.7",
+    "tsx": "^4.20.3",
     "yandex-cloud-fn": "^2.4.0"
   },
   "devDependencies": {

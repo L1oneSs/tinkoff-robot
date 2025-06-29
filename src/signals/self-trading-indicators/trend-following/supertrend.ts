@@ -68,7 +68,7 @@ export class SuperTrendSignal extends Signal<SuperTrendSignalConfig> {
     // Смена направления тренда с нисходящего на восходящий
     if (!previous.direction && current.direction) {
       this.logger.warn(
-        `SuperTrend сменил направление на восходящий тренд при цене ${currentPrice.toFixed(2)}, покупаем`
+        `SuperTrend сменил направление на восходящий тренд при цене ${currentPrice.toFixed(2)}, необходима покупка`
       );
       return 'buy';
     }
@@ -76,7 +76,7 @@ export class SuperTrendSignal extends Signal<SuperTrendSignalConfig> {
     // Смена направления тренда с восходящего на нисходящий
     if (previous.direction && !current.direction && profit > 0) {
       this.logger.warn(
-        `SuperTrend сменил направление на нисходящий тренд при цене ${currentPrice.toFixed(2)}, продаем`
+        `SuperTrend сменил направление на нисходящий тренд при цене ${currentPrice.toFixed(2)}, необходима продажа`
       );
       return 'sell';
     }
@@ -87,7 +87,7 @@ export class SuperTrendSignal extends Signal<SuperTrendSignalConfig> {
     // Цена пробивает SuperTrend снизу вверх
     if (prevPrice <= previous.superTrend && currentPrice > current.superTrend && current.direction) {
       this.logger.warn(
-        `Цена пробила SuperTrend снизу вверх (${currentPrice.toFixed(2)} > ${current.superTrend.toFixed(2)}), покупаем`
+        `Цена пробила SuperTrend снизу вверх (${currentPrice.toFixed(2)} > ${current.superTrend.toFixed(2)}), необходима покупка`
       );
       return 'buy';
     }
@@ -95,7 +95,7 @@ export class SuperTrendSignal extends Signal<SuperTrendSignalConfig> {
     // Цена пробивает SuperTrend сверху вниз
     if (prevPrice >= previous.superTrend && currentPrice < current.superTrend && !current.direction && profit > 0) {
       this.logger.warn(
-        `Цена пробила SuperTrend сверху вниз (${currentPrice.toFixed(2)} < ${current.superTrend.toFixed(2)}), продаем`
+        `Цена пробила SuperTrend сверху вниз (${currentPrice.toFixed(2)} < ${current.superTrend.toFixed(2)}), необходима продажа`
       );
       return 'sell';
     }

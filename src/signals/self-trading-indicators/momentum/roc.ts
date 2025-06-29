@@ -44,13 +44,13 @@ export class RocSignal extends Signal<RocSignalConfig> {
     
     // Пересечение нулевой линии снизу вверх - сигнал на покупку
     if (crossover(rocValues, zeroLine)) {
-      this.logger.warn('ROC пересек нулевую линию снизу вверх, начало роста, покупаем');
+      this.logger.warn('ROC пересек нулевую линию снизу вверх, начало роста, необходима покупка');
       return 'buy';
     }
     
     // Пересечение нулевой линии сверху вниз - сигнал на продажу
     if (crossunder(rocValues, zeroLine) && profit > 0) {
-      this.logger.warn('ROC пересек нулевую линию сверху вниз, начало падения, продаем');
+      this.logger.warn('ROC пересек нулевую линию сверху вниз, начало падения, необходима продажа');
       return 'sell';
     }
     
@@ -58,13 +58,13 @@ export class RocSignal extends Signal<RocSignalConfig> {
     const currentRoc = rocValues[rocValues.length - 1];
     
     if (currentRoc < lowerThreshold) {
-      this.logger.warn(`ROC достиг экстремально низкого уровня ${currentRoc.toFixed(2)}%, возможен отскок, покупаем`);
+      this.logger.warn(`ROC достиг экстремально низкого уровня ${currentRoc.toFixed(2)}%, возможен отскок, необходима покупка`);
       return 'buy';
     }
     
     if (currentRoc > upperThreshold && profit > 0) {
       this.logger.warn(
-        `ROC достиг экстремально высокого уровня ${currentRoc.toFixed(2)}%, возможна коррекция, продаем`
+        `ROC достиг экстремально высокого уровня ${currentRoc.toFixed(2)}%, возможна коррекция, необходима продажа`
       );
       return 'sell';
     }

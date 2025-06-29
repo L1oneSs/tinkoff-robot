@@ -59,11 +59,11 @@ export class BollingerBandsSignal extends Signal<BollingerBandsSignalConfig> {
     this.plot("lowerBand", lowerBand, candles);
 
     if (currentPrice <= currentLower) {
-      this.logger.warn(`Цена касается нижней полосы Боллинджера, покупаем`);
+      this.logger.warn(`Цена касается нижней полосы Боллинджера, необходима покупка`);
       return "buy";
     }
     if (currentPrice >= currentUpper && profit > 0) {
-      this.logger.warn(`Цена касается верхней полосы Боллинджера, продаем`);
+      this.logger.warn(`Цена касается верхней полосы Боллинджера, необходима продажа`);
       return "sell";
     }
   }

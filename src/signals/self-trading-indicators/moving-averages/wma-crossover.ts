@@ -40,12 +40,12 @@ export class WmaCrossoverSignal extends Signal<WmaCrossoverSignalConfig> {
 
     if (crossover(fastWma, slowWma)) {
       this.logger.warn(
-        `WMA: быстрое пересекло медленное снизу вверх, покупаем`,
+        `WMA: быстрое пересекло медленное снизу вверх, необходима покупка`,
       );
       return "buy";
     }
     if (crossunder(fastWma, slowWma) && profit > 0) {
-      this.logger.warn(`WMA: быстрое пересекло медленное сверху вниз, продаем`);
+      this.logger.warn(`WMA: быстрое пересекло медленное сверху вниз, необходима продажа`);
       return "sell";
     }
   }
