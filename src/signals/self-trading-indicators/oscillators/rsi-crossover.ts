@@ -5,9 +5,9 @@
 
 /* eslint-disable max-statements */
 
-import { Strategy } from '../strategy.js';
-import { crossover, crossunder, rsi, toSeries} from '../utils/indicators.js';
-import { Signal, SignalParams, SignalResult } from './base.js';
+import { Strategy } from '../../../strategy.js';
+import { crossover, crossunder, rsi, toSeries} from '../../../utils/indicators.js';
+import { Signal, SignalParams, SignalResult } from '../../base.js';
 
 const defaultConfig = {
   /** Кол-во точек для расчета rsi */

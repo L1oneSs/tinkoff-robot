@@ -3,9 +3,9 @@
  * Пересечение быстрой и медленной экспоненциальных скользящих средних.
  */
 
-import { Strategy } from "../strategy.js";
-import { crossover, crossunder, ema } from "../utils/indicators.js";
-import { Signal, SignalParams, SignalResult } from "./base.js";
+import { Strategy } from "../../../strategy.js";
+import { crossover, crossunder, ema } from "../../../utils/indicators.js";
+import { Signal, SignalParams, SignalResult } from "../../base.js";
 
 const defaultConfig = {
   fastLength: 12,

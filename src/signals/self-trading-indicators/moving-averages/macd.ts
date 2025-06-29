@@ -3,9 +3,9 @@
  * Использует схождение и расхождение скользящих средних для генерации сигналов.
  */
 
-import { Strategy } from "../strategy.js";
-import { crossover, crossunder, macd } from "../utils/indicators.js";
-import { Signal, SignalParams, SignalResult } from "./base.js";
+import { Strategy } from "../../../strategy.js";
+import { crossover, crossunder, macd } from "../../../utils/indicators.js";
+import { Signal, SignalParams, SignalResult } from "../../base.js";
 
 const defaultConfig = {
   fastLength: 12,
@@ -36,8 +36,20 @@ export class MacdSignal extends Signal<MacdSignalConfig> {
       this.config.signalLength,
     );
 
-    const macdLine = macdValues.map((v) => v.macd);
-    const signalLine = macdValues.map((v) => v.signal);
+    // Фильтруем undefined значения
+    const validMacdValues = macdValues.filter((v) => v !== undefined);
+    
+    if (validMacdValues.length < 2) {
+      return undefined;
+    }
+
+    const macdLine = validMacdValues.map((v) => v.macd);
+    const signalLine = validMacdValues.map((v) => v.signal);
+
+    // Проверяем, что у нас есть валидные значения
+    if (macdLine.some(v => v === undefined) || signalLine.some(v => v === undefined)) {
+      return undefined;
+    }
 
     this.plot("macd", macdLine, candles);
     this.plot("signal", signalLine, candles);

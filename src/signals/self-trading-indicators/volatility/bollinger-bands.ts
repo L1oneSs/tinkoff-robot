@@ -3,9 +3,9 @@
  * Покупка при касании нижней полосы, продажа при касании верхней.
  */
 
-import { Strategy } from "../strategy.js";
-import { bollingerBands } from "../utils/indicators.js";
-import { Signal, SignalParams, SignalResult } from "./base.js";
+import { Strategy } from "../../../strategy.js";
+import { bollingerBands } from "../../../utils/indicators.js";
+import { Signal, SignalParams, SignalResult } from "../../base.js";
 
 const defaultConfig = {
   length: 20,
@@ -34,11 +34,25 @@ export class BollingerBandsSignal extends Signal<BollingerBandsSignalConfig> {
       this.config.stdDev,
     );
 
-    const upperBand = bbValues.map((v) => v.upper);
-    const lowerBand = bbValues.map((v) => v.lower);
+    // Фильтруем undefined значения и извлекаем полосы
+    const validBbValues = bbValues.filter((v) => v !== undefined);
+    if (validBbValues.length === 0) {
+      // Недостаточно данных для расчета
+      return undefined;
+    }
+
+    const upperBand = validBbValues.map((v) => v.upper);
+    const lowerBand = validBbValues.map((v) => v.lower);
     const currentPrice = closePrices[closePrices.length - 1];
+    
+    // Берем последние валидные значения полос
     const currentUpper = upperBand[upperBand.length - 1];
     const currentLower = lowerBand[lowerBand.length - 1];
+
+    // Проверяем, что у нас есть валидные значения полос
+    if (currentUpper === undefined || currentLower === undefined) {
+      return undefined;
+    }
 
     this.plot("price", closePrices, candles);
     this.plot("upperBand", upperBand, candles);

@@ -10,6 +10,10 @@ import { Portfolio } from './account/portfolio.js';
 
 const { REAL_ACCOUNT_ID = '', SANDBOX_ACCOUNT_ID = '' } = process.env;
 
+// Убираем лишние символы из account ID
+const cleanRealAccountId = REAL_ACCOUNT_ID.trim();
+const cleanSandboxAccountId = SANDBOX_ACCOUNT_ID.trim();
+
 export interface RobotConfig {
   /** Используем реальный счет или песочницу */
   useRealAccount: boolean,
@@ -42,9 +46,12 @@ export class Robot {
   constructor(public api: TinkoffInvestApi, config: RobotConfig) {
     this.config = Object.assign({}, defaults, config);
     this.logger = new Logger({ prefix: '[robot]:', level: this.config.logLevel as LogLevel });
+    
+    // Используем переданный API (правильный для типа аккаунта)
     this.account = config.useRealAccount
-      ? new RealAccount(api, REAL_ACCOUNT_ID)
-      : new SandboxAccount(api, SANDBOX_ACCOUNT_ID);
+      ? new RealAccount(api, cleanRealAccountId)
+      : new SandboxAccount(api, cleanSandboxAccountId);
+      
     this.candlesLoader = new CandlesLoader(api, { cacheDir: this.config.cacheDir });
     this.orders = new Orders(this);
     this.portfolio = new Portfolio(this);

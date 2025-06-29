@@ -4,9 +4,9 @@
  * Пересечение быстрого и медленного LWMA для определения сигналов покупки/продажи.
  */
 
-import { Strategy } from "../strategy.js";
-import { lwma, crossover, crossunder } from "../utils/indicators.js";
-import { Signal, SignalParams, SignalResult } from "./base.js";
+import { Strategy } from "../../../strategy.js";
+import { lwma, crossover, crossunder } from "../../../utils/indicators.js";
+import { Signal, SignalParams, SignalResult } from "../../base.js";
 
 const defaultConfig = {
   /** Период быстрого LWMA */

@@ -4,10 +4,10 @@
  * Использует пересечение нулевой линии и смену цвета столбцов.
  */
 
-import { quotationToNumber } from "../helpers/num-helpers.js";
-import { Strategy } from "../strategy.js";
-import { ao, crossover, crossunder, toSeries } from "../utils/indicators.js";
-import { Signal, SignalParams, SignalResult } from "./base.js";
+import { quotationToNumber } from "../../../helpers/num-helpers.js";
+import { Strategy } from "../../../strategy.js";
+import { ao, crossover, crossunder, toSeries } from "../../../utils/indicators.js";
+import { Signal, SignalParams, SignalResult } from "../../base.js";
 
 const defaultConfig = {
   /** Порог для определения сигналов (обычно 0) */

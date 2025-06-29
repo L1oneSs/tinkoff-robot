@@ -8,9 +8,9 @@
 
 /* eslint-disable max-statements */
 
-import { Strategy } from '../strategy.js';
-import { crossover, crossunder, sma } from '../utils/indicators.js';
-import { Signal, SignalParams, SignalResult } from './base.js';
+import { Strategy } from '../../../strategy.js';
+import { crossover, crossunder, sma } from '../../../utils/indicators.js';
+import { Signal, SignalParams, SignalResult } from '../../base.js';
 
 const defaultConfig = {
   /** Кол-во точек для расчета быстрого тренда */

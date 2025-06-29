@@ -12,6 +12,7 @@
     "candles": "node --loader ts-node/esm scripts/load-candles.ts",
     "instruments": "node --loader ts-node/esm scripts/load-instruments.ts",
     "backtest": "node --loader ts-node/esm scripts/run-backtest.ts",
+    "config": "node --loader ts-node/esm scripts/manage-configs.ts",
     "chart": "open chart/index.html",
     "toc": "markdown-toc README.md -i",
     "market": "node --loader ts-node/esm scripts/run-market.ts",
