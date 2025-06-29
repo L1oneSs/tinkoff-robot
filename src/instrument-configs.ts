@@ -9,7 +9,7 @@ import {
   ROSN_CONFIG, TATN_CONFIG, GAZP_CONFIG, LKOH_CONFIG,
   SBER_CONFIG, VTBR_CONFIG,
   RUAL_CONFIG, NLMK_CONFIG, GMKN_CONFIG,
-  DSKY_CONFIG, MGNT_CONFIG,
+  MGNT_CONFIG,
   MTSS_CONFIG,
   YNDX_CONFIG
 } from './instruments/index.js';
@@ -45,7 +45,6 @@ const ALL_INSTRUMENT_CONFIGS: BaseInstrumentConfig[] = [
   GMKN_CONFIG,
   
   // Ритейл
-  DSKY_CONFIG,
   MGNT_CONFIG,
   
   // Телекоммуникации

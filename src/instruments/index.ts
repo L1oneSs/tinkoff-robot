@@ -25,7 +25,6 @@ export {
 
 // Ритейл
 export {
-  DSKY_CONFIG,
   MGNT_CONFIG
 } from './riteil/index.js';
 

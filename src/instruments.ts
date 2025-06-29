@@ -76,14 +76,8 @@ export const INSTRUMENTS: Record<string, InstrumentInfo> = {
   },
 
   // Ритейл
-  DSKY: {
-    figi: 'BBG000BN56Q9',
-    name: 'Детский мир',
-    ticker: 'DSKY',
-    sector: 'Ритейл'
-  },
   MGNT: {
-    figi: 'BBG004S681B1',
+    figi: 'BBG004RVFCY3',
     name: 'Магнит',
     ticker: 'MGNT',
     sector: 'Ритейл'
