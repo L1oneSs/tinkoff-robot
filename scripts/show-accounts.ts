@@ -34,10 +34,10 @@ async function showAccount(a: Account) {
 
 function showAccountHeader(account: TinkoffAccount, p: PortfolioResponse) {
   const s = [
-    account.accountId,
-    `currency: ${api.helpers.toNumber(p.totalAmountCurrencies)},`,
-    `shares: ${api.helpers.toNumber(p.totalAmountShares)}`,
-    p.expectedYield && `(${api.helpers.toNumber(p.expectedYield)}%)`,
+    `account ID: ${account.accountId}\n`,
+    `currency: ${api.helpers.toNumber(p.totalAmountCurrencies)},\n`,
+    `shares: ${api.helpers.toNumber(p.totalAmountShares)}\n`,
+    p.expectedYield && `(${api.helpers.toNumber(p.expectedYield)}%)\n`,
   ].join(' ');
   console.log(s);
 }
@@ -75,7 +75,6 @@ async function showOperations(account: RealAccount | SandboxAccount, { figi }: P
     state: OperationState.OPERATION_STATE_EXECUTED,
     ...api.helpers.fromTo(OPERATIONS_PERIOD)
   });
-  // console.log(JSON.stringify(operations, null, 2))
   operations.forEach(o => {
     const s = [
       ' '.repeat(8),
