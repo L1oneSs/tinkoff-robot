@@ -17,6 +17,9 @@ module.exports = {
       NODE_ENV: 'production',
       TINKOFF_API_TOKEN: env.TINKOFF_API_TOKEN,
       REAL_ACCOUNT_ID: env.REAL_ACCOUNT_ID,
+      SANDBOX_ACCOUNT_ID: env.SANDBOX_ACCOUNT_ID,
+      TELEGRAM_BOT_TOKEN: env.TELEGRAM_BOT_TOKEN,
+      TELEGRAM_CHAT_ID: env.TELEGRAM_CHAT_ID,
     },
   },
 };
