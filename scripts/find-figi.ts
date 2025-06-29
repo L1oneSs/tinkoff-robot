@@ -11,19 +11,20 @@
 import { config } from 'dotenv';
 import { TinkoffInvestApi } from 'tinkoff-invest-api';
 import { InstrumentStatus } from 'tinkoff-invest-api/dist/generated/instruments.js';
+import type { Share, Bond, Etf } from 'tinkoff-invest-api/dist/generated/instruments.js';
 
 // Загружаем переменные окружения
 config();
 
-function printInstruments(instruments: any[]) {
+function printInstruments(instruments: (Share | Bond | Etf)[]) {
   instruments.forEach((instrument, index) => {
     console.log(`📊 ${index + 1}. ${instrument.name}`);
     console.log(`   Тикер: ${instrument.ticker}`);
     console.log(`   FIGI: ${instrument.figi}`);
-    console.log(`   Класс: ${instrument.instrumentType || 'Акция'}`);
+    console.log(`   Класс: ${'instrumentType' in instrument ? instrument.instrumentType : 'Неизвестно'}`);
     console.log(`   Валюта: ${instrument.currency}`);
     console.log(`   Биржа: ${instrument.exchange}`);
-    console.log(`   Торговля доступна: ${instrument.tradingStatus === 'SECURITY_TRADING_STATUS_NORMAL_TRADING' ? 'Да' : 'Нет'}`);
+    console.log(`   Торговля доступна: ${instrument.tradingStatus === 1 ? 'Да' : 'Нет'}`);
     
     if (instrument.lot) {
       console.log(`   Размер лота: ${instrument.lot}`);
@@ -43,76 +44,98 @@ function printInstruments(instruments: any[]) {
   }
 }
 
-async function findFigi(ticker: string) {
+async function searchInShares(api: TinkoffInvestApi, ticker: string) {
+  const response = await api.instruments.shares({
+    instrumentStatus: InstrumentStatus.INSTRUMENT_STATUS_BASE
+  });
+  
+  return response.instruments.filter(instrument => 
+    instrument.ticker.toUpperCase() === ticker.toUpperCase()
+  );
+}
+
+async function searchInBonds(api: TinkoffInvestApi, ticker: string) {
+  const response = await api.instruments.bonds({
+    instrumentStatus: InstrumentStatus.INSTRUMENT_STATUS_BASE
+  });
+  
+  return response.instruments.filter(instrument => 
+    instrument.ticker.toUpperCase() === ticker.toUpperCase()
+  );
+}
+
+async function searchInEtfs(api: TinkoffInvestApi, ticker: string) {
+  const response = await api.instruments.etfs({
+    instrumentStatus: InstrumentStatus.INSTRUMENT_STATUS_BASE
+  });
+  
+  return response.instruments.filter(instrument => 
+    instrument.ticker.toUpperCase() === ticker.toUpperCase()
+  );
+}
+
+function validateInput(ticker: string): void {
   if (!ticker) {
     console.log('❌ Укажите тикер. Пример: npx tsx scripts/find-figi.ts SBER');
     process.exit(1);
   }
+}
 
-  // Проверяем токен
+function validateToken(): string {
   const token = (process.env.TINKOFF_TOKEN || process.env.TINKOFF_API_TOKEN)?.trim();
   if (!token) {
     console.log('❌ Переменная окружения TINKOFF_TOKEN или TINKOFF_API_TOKEN не установлена');
     console.log('Убедитесь, что файл .env содержит правильный токен');
     process.exit(1);
   }
+  return token;
+}
+
+async function searchInAllInstruments(api: TinkoffInvestApi, ticker: string) {
+  // Поиск в акциях
+  const matchingShares = await searchInShares(api, ticker);
+  if (matchingShares.length > 0) {
+    console.log(`✅ Найдено акций: ${matchingShares.length}\n`);
+    printInstruments(matchingShares);
+    return true;
+  }
+  
+  // Поиск в облигациях
+  const matchingBonds = await searchInBonds(api, ticker);
+  if (matchingBonds.length > 0) {
+    console.log(`✅ Найдено облигаций: ${matchingBonds.length}\n`);
+    printInstruments(matchingBonds);
+    return true;
+  }
+
+  // Поиск в ETF
+  const matchingEtfs = await searchInEtfs(api, ticker);
+  if (matchingEtfs.length > 0) {
+    console.log(`✅ Найдено ETF: ${matchingEtfs.length}\n`);
+    printInstruments(matchingEtfs);
+    return true;
+  }
+
+  return false;
+}
+
+async function findFigi(ticker: string) {
+  validateInput(ticker);
+  const token = validateToken();
 
   try {
     console.log(`🔍 Поиск FIGI для тикера: ${ticker.toUpperCase()}\n`);
 
-    // Создаем API
     const api = new TinkoffInvestApi({
       token: token,
       appName: 'tinkoff-robot-figi-finder'
     });
 
-    // Поиск акций по тикеру
-    const sharesResponse = await api.instruments.shares({
-      instrumentStatus: InstrumentStatus.INSTRUMENT_STATUS_BASE
-    });
+    const found = await searchInAllInstruments(api, ticker);
     
-    // Фильтруем по тикеру
-    const matchingShares = sharesResponse.instruments.filter(instrument => 
-      instrument.ticker.toUpperCase() === ticker.toUpperCase()
-    );
-
-    if (matchingShares.length > 0) {
-      console.log(`✅ Найдено акций: ${matchingShares.length}\n`);
-      printInstruments(matchingShares);
-      return;
+    if (!found) {
+      console.log(`❌ Инструменты с тикером "${ticker}" не найдены`);
     }
-    
-    // Если акции не найдены, ищем в облигациях
-    const bondsResponse = await api.instruments.bonds({
-      instrumentStatus: InstrumentStatus.INSTRUMENT_STATUS_BASE
-    });
-    
-    const matchingBonds = bondsResponse.instruments.filter(instrument => 
-      instrument.ticker.toUpperCase() === ticker.toUpperCase()
-    );
-    
-    if (matchingBonds.length > 0) {
-      console.log(`✅ Найдено облигаций: ${matchingBonds.length}\n`);
-      printInstruments(matchingBonds);
-      return;
-    }
-
-    // Если ничего не найдено, ищем в ETF
-    const etfResponse = await api.instruments.etfs({
-      instrumentStatus: InstrumentStatus.INSTRUMENT_STATUS_BASE
-    });
-    
-    const matchingEtfs = etfResponse.instruments.filter(instrument => 
-      instrument.ticker.toUpperCase() === ticker.toUpperCase()
-    );
-    
-    if (matchingEtfs.length > 0) {
-      console.log(`✅ Найдено ETF: ${matchingEtfs.length}\n`);
-      printInstruments(matchingEtfs);
-      return;
-    }
-
-    console.log(`❌ Инструменты с тикером "${ticker}" не найдены`);
 
   } catch (error) {
     console.error('❌ Ошибка при поиске FIGI:', error);

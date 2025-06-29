@@ -58,13 +58,17 @@ export class RocSignal extends Signal<RocSignalConfig> {
     const currentRoc = rocValues[rocValues.length - 1];
     
     if (currentRoc < lowerThreshold) {
-      this.logger.warn(`ROC достиг экстремально низкого уровня ${currentRoc.toFixed(2)}%, возможен отскок, необходима покупка`);
+      this.logger.warn(
+        `ROC достиг экстремально низкого уровня ${currentRoc.toFixed(2)}%, ` +
+          `возможен отскок, необходима покупка`,
+      );
       return 'buy';
     }
     
     if (currentRoc > upperThreshold && profit > 0) {
       this.logger.warn(
-        `ROC достиг экстремально высокого уровня ${currentRoc.toFixed(2)}%, возможна коррекция, необходима продажа`
+        `ROC достиг экстремально высокого уровня ${currentRoc.toFixed(2)}%, ` +
+          `возможна коррекция, необходима продажа`,
       );
       return 'sell';
     }

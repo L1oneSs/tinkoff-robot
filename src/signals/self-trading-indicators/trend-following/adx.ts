@@ -92,7 +92,10 @@ export class AdxSignal extends Signal<AdxSignalConfig> {
     
     // Очень сильный тренд - возможна коррекция
     if (currentAdx > strongTrendLevel && !isTrendStrengthening && profit > 0) {
-      this.logger.warn(`ADX ${currentAdx.toFixed(2)} достиг максимума и начал снижаться, возможна коррекция, необходима продажа`);
+      this.logger.warn(
+        `ADX ${currentAdx.toFixed(2)} достиг максимума и начал снижаться, ` +
+          `возможна коррекция, необходима продажа`,
+      );
       return 'sell';
     }
   }

@@ -54,13 +54,19 @@ export class StochasticSignal extends Signal<StochasticSignalConfig> {
     
     // Пересечение снизу уровня перепроданности - сигнал на покупку
     if (crossover(stochValues, oversoldLine)) {
-      this.logger.warn(`Stochastic пересек уровень ${oversoldLevel} снизу вверх, актив перепродан, необходима покупка`);
+      this.logger.warn(
+        `Stochastic пересек уровень ${oversoldLevel} снизу вверх, ` +
+          `актив перепродан, необходима покупка`,
+      );
       return 'buy';
     }
     
     // Пересечение сверху уровня перекупленности - сигнал на продажу
     if (crossunder(stochValues, overboughtLine) && profit > 0) {
-      this.logger.warn(`Stochastic пересек уровень ${overboughtLevel} сверху вниз, актив перекуплен, необходима продажа`);
+      this.logger.warn(
+        `Stochastic пересек уровень ${overboughtLevel} сверху вниз, ` +
+          `актив перекуплен, необходима продажа`,
+      );
       return 'sell';
     }
   }
