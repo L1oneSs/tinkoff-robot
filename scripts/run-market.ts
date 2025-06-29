@@ -28,12 +28,30 @@ const delay = intervalToMs(config.strategies[0].interval);
 main();
 
 async function main() {
-  const finalConfig = { ...config, ...cliFlags };
+  const finalConfig = { 
+    ...config, 
+    ...cliFlags,
+    enableNotifications: true,
+    enableReports: true,
+  };
+  
   const robot = new Robot(api, finalConfig);
+  
+  // Показываем статус планировщика при запуске
+  console.log('\n' + robot.getSchedulerStatus());
+  console.log(`\nТорговое время: ${robot.isTradingTime() ? 'Да' : 'Нет'}`);
+  
   if (cliFlags.cron) {
     await robot.runOnce();
     return;
   }
+  
+  console.log('\n🤖 Запуск торгового робота в непрерывном режиме...');
+  console.log('📱 Уведомления: включены');
+  console.log('📊 Автоматические отчеты: включены');
+  console.log('⏰ Отчеты отправляются ежедневно в 18:50-19:00 МСК');
+  console.log('📅 Еженедельные отчеты и очистка: по пятницам\n');
+  
   while (true) {
     await robot.runOnce();
     await sleep(delay);

@@ -261,6 +261,9 @@ export class Strategy extends RobotModule {
     if (this.checkEnoughCurrency(orderReq)) {
       this.logger.warn(`Покупаем по цене ${currentPrice}.`);
       await this.robot.orders.postLimitOrder(orderReq);
+      
+      // Записываем сделку и отправляем уведомление
+      await this.recordBuyTrade(currentPrice, this.config.orderLots);
     }
   }
 
@@ -288,6 +291,9 @@ export class Strategy extends RobotModule {
     ].join(' '));
 
     await this.robot.orders.postLimitOrder(orderReq);
+    
+    // Записываем сделку и отправляем уведомление
+    await this.recordSellTrade(currentPrice, availableLots);
   }
 
   /**
@@ -445,5 +451,77 @@ export class Strategy extends RobotModule {
       this.logger.error(`Ошибка в выражении триггера: ${expression}`, error);
       return false;
     }
+  }
+
+  /**
+   * Записать сделку покупки
+   */
+  private async recordBuyTrade(price: number, quantity: number) {
+    const lotSize = this.instrument.getLotSize();
+    const totalAmount = price * quantity * lotSize;
+    const commission = totalAmount * this.config.brokerFee / 100;
+    const activeSignals = this.getActiveSignals();
+    
+    await this.robot.recordTrade({
+      figi: this.config.figi,
+      instrumentName: this.instrument.getDisplayName() || this.config.figi,
+      action: 'buy',
+      quantity,
+      price,
+      totalAmount,
+      commission,
+      signals: activeSignals,
+    });
+  }
+
+  /**
+   * Записать сделку продажи
+   */
+  private async recordSellTrade(price: number, quantity: number) {
+    const lotSize = this.instrument.getLotSize();
+    const totalAmount = price * quantity * lotSize;
+    const commission = totalAmount * this.config.brokerFee / 100;
+    const activeSignals = this.getActiveSignals();
+    
+    await this.robot.recordTrade({
+      figi: this.config.figi,
+      instrumentName: this.instrument.getDisplayName() || this.config.figi,
+      action: 'sell',
+      quantity,
+      price,
+      totalAmount,
+      commission,
+      profit: this.currentProfit * totalAmount / 100, // прибыль в рублях
+      profitPercent: this.currentProfit,
+      signals: activeSignals,
+    });
+  }
+
+  /**
+   * Получить список активных сигналов
+   */
+  private getActiveSignals(): string[] {
+    const signalParams = { candles: this.instrument.candles, profit: this.currentProfit };
+    const signals: string[] = [];
+    
+    // Проверяем какие сигналы активны
+    if (this.profitSignal?.calc(signalParams)) signals.push('profit');
+    if (this.smaSignal?.calc(signalParams)) signals.push('sma');
+    if (this.rsiSignal?.calc(signalParams)) signals.push('rsi');
+    if (this.bollingerSignal?.calc(signalParams)) signals.push('bollinger');
+    if (this.macdSignal?.calc(signalParams)) signals.push('macd');
+    if (this.emaSignal?.calc(signalParams)) signals.push('ema');
+    if (this.acSignal?.calc(signalParams)) signals.push('ac');
+    if (this.aoSignal?.calc(signalParams)) signals.push('ao');
+    if (this.cciSignal?.calc(signalParams)) signals.push('cci');
+    if (this.stochasticSignal?.calc(signalParams)) signals.push('stochastic');
+    if (this.williamsSignal?.calc(signalParams)) signals.push('williams');
+    if (this.adxSignal?.calc(signalParams)) signals.push('adx');
+    if (this.psarSignal?.calc(signalParams)) signals.push('psar');
+    if (this.supertrendSignal?.calc(signalParams)) signals.push('supertrend');
+    if (this.moveSignal?.calc(signalParams)) signals.push('move');
+    if (this.rocSignal?.calc(signalParams)) signals.push('roc');
+    
+    return signals.length > 0 ? signals : ['manual'];
   }
 }

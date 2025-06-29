@@ -64,4 +64,11 @@ export class FigiInstrument extends RobotModule {
   getLotSize() {
     return this.info?.lot || 0;
   }
+
+  /**
+   * Отображаемое имя инструмента
+   */
+  getDisplayName() {
+    return this.info?.name || this.info?.ticker || this.figi;
+  }
 }

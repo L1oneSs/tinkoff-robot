@@ -17,14 +17,23 @@
     "toc": "markdown-toc README.md -i",
     "market": "node --loader ts-node/esm scripts/run-market.ts",
     "market:real": "node --loader ts-node/esm scripts/run-market.ts --real",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "bash scripts/deploy.sh",
+    "test:notifications": "node --loader ts-node/esm scripts/test-notifications.ts",
+    "scheduler:status": "node --loader ts-node/esm scripts/check-scheduler.ts",
+    "reports:daily": "node --loader ts-node/esm scripts/send-reports.ts daily",
+    "reports:weekly": "node --loader ts-node/esm scripts/send-reports.ts weekly",
+    "telegram:chat-id": "node --loader ts-node/esm scripts/get-chat-id.ts"
   },
   "lint-staged": {
     "{src,scripts}/**/*.ts": "eslint --ext .ts"
   },
   "dependencies": {
     "@debut/indicators": "^1.3.5",
+    "@types/node-telegram-bot-api": "^0.64.9",
     "@vitalets/logger": "^2.1.1",
+    "canvas": "^3.1.2",
+    "chart.js": "^4.5.0",
+    "node-telegram-bot-api": "^0.66.0",
     "tinkoff-invest-api": "^2.4.7",
     "yandex-cloud-fn": "^2.4.0"
   },
