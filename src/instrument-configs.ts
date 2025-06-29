@@ -80,7 +80,7 @@ export interface StrategyConfig {
   interval: CandleInterval;
   
   // Старый формат сигналов для совместимости
-  signals?: any;
+  signals?: Record<string, unknown>;
 }
 
 /**
@@ -93,7 +93,7 @@ export function convertToStrategyConfig(config: BaseInstrumentConfig): StrategyC
     orderLots: config.orderLots,
     brokerFee: config.brokerFee,
     interval: config.interval,
-    signals: config.signals
+    signals: config.signals as Record<string, unknown>
   };
 }
 
@@ -127,6 +127,5 @@ export function getNewInstrumentConfig(figi: string): BaseInstrumentConfig | und
 export function getActiveNewInstrumentConfigs(): BaseInstrumentConfig[] {
   return ALL_INSTRUMENT_CONFIGS.filter(config => config.enabled);
 }
-
 
 export {};

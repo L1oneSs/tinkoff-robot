@@ -28,6 +28,7 @@ export class SuperTrendSignal extends Signal<SuperTrendSignalConfig> {
     return this.config.period + 1;
   }
 
+  // eslint-disable-next-line max-statements, complexity
   calc({ candles, profit }: SignalParams): SignalResult {
     const { period, multiplier } = this.config;
     

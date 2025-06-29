@@ -94,7 +94,7 @@ export class TradeTracker {
       const data = readFileSync(this.tradesFilePath, 'utf8');
       const trades = JSON.parse(data);
       // Преобразуем строки дат обратно в Date объекты
-      return trades.map((trade: any) => ({
+      return trades.map((trade: TradeRecord) => ({
         ...trade,
         timestamp: new Date(trade.timestamp),
       }));

@@ -13,7 +13,6 @@ config();
 
 async function sendManualReports() {
   const reportType = process.argv[2] || 'daily';
-  const date = process.argv[3] || new Date().toISOString().split('T')[0];
   
   console.log(`📊 Ручная отправка ${reportType === 'weekly' ? 'еженедельного' : 'ежедневного'} отчета...`);
   

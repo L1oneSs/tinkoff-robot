@@ -5,7 +5,6 @@
 import { createCanvas } from 'canvas';
 import { Chart, registerables } from 'chart.js';
 import { DailyStats, WeeklyStats, TradeRecord } from '../trade-tracker';
-import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { Logger } from '@vitalets/logger';
 
@@ -39,7 +38,9 @@ export class ReportGenerator {
    */
   generateDailyReport(stats: DailyStats): string {
     const profitEmoji = stats.totalProfit >= 0 ? '📈' : '📉';
-    const winRate = stats.sellTrades > 0 ? (stats.successfulTrades / stats.sellTrades * 100).toFixed(1) : '0.0';
+    const winRate = stats.sellTrades > 0 
+      ? (stats.successfulTrades / stats.sellTrades * 100).toFixed(1) 
+      : '0.0';
     
     let report = `🤖 *Ежедневный отчет за ${stats.date}*\n\n`;
     
@@ -63,7 +64,8 @@ export class ReportGenerator {
       report += `🏆 *Лучшая сделка:* ${stats.bestTrade.instrumentName} (+${stats.bestTrade.profit?.toFixed(2)} руб.)\n`;
     }
     if (stats.worstTrade) {
-      report += `💥 *Худшая сделка:* ${stats.worstTrade.instrumentName} (${stats.worstTrade.profit?.toFixed(2)} руб.)\n\n`;
+      const worstProfit = stats.worstTrade.profit?.toFixed(2);
+      report += `💥 *Худшая сделка:* ${stats.worstTrade.instrumentName} (${worstProfit} руб.)\n\n`;
     }
     
     // Торгуемые инструменты
@@ -89,7 +91,9 @@ export class ReportGenerator {
    */
   generateWeeklyReport(stats: WeeklyStats): string {
     const profitEmoji = stats.totalProfit >= 0 ? '📈' : '📉';
-    const avgDailyProfit = stats.dailyStats.length > 0 ? (stats.totalProfit / stats.dailyStats.length).toFixed(2) : '0.00';
+    const avgDailyProfit = stats.dailyStats.length > 0 
+      ? (stats.totalProfit / stats.dailyStats.length).toFixed(2) 
+      : '0.00';
     
     let report = `📅 *Еженедельный отчет (${stats.weekStart} — ${stats.weekEnd})*\n\n`;
     
@@ -138,7 +142,7 @@ export class ReportGenerator {
       cumulativeData.push(cumulative);
     }
 
-    const chart = new Chart(ctx as any, {
+    new Chart(ctx as any, {
       type: 'line',
       data: {
         labels,
@@ -246,7 +250,7 @@ export class ReportGenerator {
       return `hsl(${hue}, 70%, 60%)`;
     });
 
-    const chart = new Chart(ctx as any, {
+    new Chart(ctx as any, {
       type: 'doughnut',
       data: {
         labels,

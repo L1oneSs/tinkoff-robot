@@ -367,6 +367,7 @@ export class Strategy extends RobotModule {
    * Получить новую конфигурацию с триггерами
    */
   getNewConfig() {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getNewInstrumentConfig } = require('./instrument-configs.js');
     return getNewInstrumentConfig(this.config.figi);
   }
@@ -403,25 +404,47 @@ export class Strategy extends RobotModule {
       profit: this.currentProfit
     };
 
-    // Проверяем все сигналы и записываем их состояния
+    // Основные сигналы
+    this.addBasicSignalStates(states, signalParams);
+    
+    // Осцилляторы
+    this.addOscillatorSignalStates(states, signalParams);
+    
+    // Трендовые сигналы
+    this.addTrendSignalStates(states, signalParams);
+    
+    // Импульсные сигналы
+    this.addMomentumSignalStates(states, signalParams);
+
+    return states;
+  }
+
+  private addBasicSignalStates(states: Record<string, boolean>, signalParams: any) {
     if (this.profitSignal) states.profit = this.profitSignal.calc(signalParams) === 'sell';
     if (this.smaSignal) states.sma = this.smaSignal.calc(signalParams) === 'buy';
     if (this.rsiSignal) states.rsi = this.rsiSignal.calc(signalParams) === 'buy';
     if (this.bollingerSignal) states.bollinger = this.bollingerSignal.calc(signalParams) === 'buy';
     if (this.macdSignal) states.macd = this.macdSignal.calc(signalParams) === 'buy';
     if (this.emaSignal) states.ema = this.emaSignal.calc(signalParams) === 'buy';
+  }
+
+  private addOscillatorSignalStates(states: Record<string, boolean>, signalParams: any) {
     if (this.acSignal) states.ac = this.acSignal.calc(signalParams) === 'buy';
     if (this.aoSignal) states.ao = this.aoSignal.calc(signalParams) === 'buy';
     if (this.cciSignal) states.cci = this.cciSignal.calc(signalParams) === 'buy';
     if (this.stochasticSignal) states.stochastic = this.stochasticSignal.calc(signalParams) === 'buy';
     if (this.williamsSignal) states.williams = this.williamsSignal.calc(signalParams) === 'buy';
+  }
+
+  private addTrendSignalStates(states: Record<string, boolean>, signalParams: any) {
     if (this.adxSignal) states.adx = this.adxSignal.calc(signalParams) === 'buy';
     if (this.psarSignal) states.psar = this.psarSignal.calc(signalParams) === 'buy';
     if (this.supertrendSignal) states.supertrend = this.supertrendSignal.calc(signalParams) === 'buy';
+  }
+
+  private addMomentumSignalStates(states: Record<string, boolean>, signalParams: any) {
     if (this.moveSignal) states.move = this.moveSignal.calc(signalParams) === 'buy';
     if (this.rocSignal) states.roc = this.rocSignal.calc(signalParams) === 'buy';
-
-    return states;
   }
 
   /**
@@ -504,24 +527,40 @@ export class Strategy extends RobotModule {
     const signalParams = { candles: this.instrument.candles, profit: this.currentProfit };
     const signals: string[] = [];
     
-    // Проверяем какие сигналы активны
+    // Основные сигналы
+    this.addActiveBasicSignals(signals, signalParams);
+    
+    // Осцилляторы
+    this.addActiveOscillatorSignals(signals, signalParams);
+    
+    // Трендовые и импульсные сигналы
+    this.addActiveTrendAndMomentumSignals(signals, signalParams);
+    
+    return signals.length > 0 ? signals : ['manual'];
+  }
+
+  private addActiveBasicSignals(signals: string[], signalParams: any) {
     if (this.profitSignal?.calc(signalParams)) signals.push('profit');
     if (this.smaSignal?.calc(signalParams)) signals.push('sma');
     if (this.rsiSignal?.calc(signalParams)) signals.push('rsi');
     if (this.bollingerSignal?.calc(signalParams)) signals.push('bollinger');
     if (this.macdSignal?.calc(signalParams)) signals.push('macd');
     if (this.emaSignal?.calc(signalParams)) signals.push('ema');
+  }
+
+  private addActiveOscillatorSignals(signals: string[], signalParams: any) {
     if (this.acSignal?.calc(signalParams)) signals.push('ac');
     if (this.aoSignal?.calc(signalParams)) signals.push('ao');
     if (this.cciSignal?.calc(signalParams)) signals.push('cci');
     if (this.stochasticSignal?.calc(signalParams)) signals.push('stochastic');
     if (this.williamsSignal?.calc(signalParams)) signals.push('williams');
+  }
+
+  private addActiveTrendAndMomentumSignals(signals: string[], signalParams: any) {
     if (this.adxSignal?.calc(signalParams)) signals.push('adx');
     if (this.psarSignal?.calc(signalParams)) signals.push('psar');
     if (this.supertrendSignal?.calc(signalParams)) signals.push('supertrend');
     if (this.moveSignal?.calc(signalParams)) signals.push('move');
     if (this.rocSignal?.calc(signalParams)) signals.push('roc');
-    
-    return signals.length > 0 ? signals : ['manual'];
   }
 }

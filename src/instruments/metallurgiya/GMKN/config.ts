@@ -3,7 +3,6 @@
  * Сектор: Металлургия
  */
 
-import { CandleInterval } from 'tinkoff-invest-api/dist/generated/marketdata.js';
 import { INSTRUMENTS } from '../../../instruments.js';
 import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
 
