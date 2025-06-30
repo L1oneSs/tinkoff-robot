@@ -22,8 +22,12 @@ export const MGNT_CONFIG: BaseInstrumentConfig = {
     bollinger: { length: 20, stdDev: 2.2 }
   },
   triggers: {
-    buySignal: '(sma || ema) && (rsi || stochastic) && macd',
-    sellSignal: 'profit || ((!sma && !ema) || (bollinger && (!rsi && !stochastic)))',
-    description: 'Магнит: ритейловая стратегия восстановления с фильтрацией ложных сигналов'
+    // Покупка: тренд + моментум
+    buySignal: '(sma || ema) && (rsi || macd)',
+    
+    // Продажа: прибыль или разворот тренда
+    sellSignal: 'profit || (sma && ema)',
+    
+    description: 'Магнит: упрощенная стратегия для ритейла'
   }
 };

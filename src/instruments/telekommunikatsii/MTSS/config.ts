@@ -22,8 +22,12 @@ export const MTSS_CONFIG: BaseInstrumentConfig = {
     williams: { period: 14, overboughtLevel: -20, oversoldLevel: -80 }
   },
   triggers: {
-    buySignal: '(sma && ema && macd) && (rsi || bollinger) && (!williams || adx)',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && williams) || (!macd && bollinger)',
-    description: 'Стабильная дивидендная стратегия для телеком-лидера с экосистемным ростом'
+    // Покупка: тренд + любое подтверждение
+    buySignal: '(sma || ema) && (macd || rsi)',
+    
+    // Продажа: прибыль или разворот тренда
+    sellSignal: 'profit || (sma && ema)',
+    
+    description: 'МТС: упрощенная стратегия для телеком-лидера'
   }
 };

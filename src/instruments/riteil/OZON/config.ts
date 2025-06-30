@@ -23,8 +23,12 @@ export const OZON_CONFIG: BaseInstrumentConfig = {
     supertrend: { period: 10, multiplier: 3.0 }
   },
   triggers: {
-    buySignal: '(sma && ema && adx) && (macd || supertrend) && (!rsi || bollinger)',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && !macd) || (!adx && !supertrend)',
-    description: 'E-commerce лидер с высоким потенциалом роста в цифровой экономике'
+    // Покупка: базовый тренд + любой подтверждающий сигнал
+    buySignal: '(sma || ema) && (macd || rsi)',
+    
+    // Продажа: прибыль или два против
+    sellSignal: 'profit || (sma && ema)',
+    
+    description: 'OZON: упрощенная стратегия для высоковолатильной бумаги'
   }
 };

@@ -20,12 +20,12 @@ export const SBER_CONFIG: BaseInstrumentConfig = {
     ema: { fastLength: 9, slowLength: 21 }
   },
   triggers: {
-    // Покупка: дивидендная история + технический разворот + подтверждение трендом
-    buySignal: '(sma || ema) && macd && (rsi || williams || bollinger)',
+    // Покупка: один трендовый + один моментум индикатор
+    buySignal: '(sma || ema) && (rsi || macd)',
     
-    // Продажа: строгий риск-менеджмент + признаки разворота тренда
-    sellSignal: 'profit || ((!sma && !ema) || (!macd && (rsi || williams)))',
+    // Продажа: прибыль или два трендовых против
+    sellSignal: 'profit || (sma && ema)',
     
-    description: 'Сбербанк: дивидендная стратегия с быстрым реагированием на тренды (5min), учет высоких ставок ЦБ'
+    description: 'Сбербанк: упрощенная стратегия для частых сигналов'
   }
 };

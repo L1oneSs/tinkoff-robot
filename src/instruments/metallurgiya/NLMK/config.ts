@@ -22,13 +22,12 @@ export const NLMK_CONFIG: BaseInstrumentConfig = {
     williams: { period: 14, overboughtLevel: -20, oversoldLevel: -80 }
   },
   triggers: {
-    // Покупка: ждем множественного подтверждения разворота от всех индикаторов
-    buySignal: '(sma && ema) && macd && (rsi && williams && stochastic) && (move || bollinger)',
+    // Покупка: тренд + любой моментум
+    buySignal: '(sma || ema) && (rsi || macd || williams)',
     
-    // Продажа: быстрая фиксация любой прибыли + защита от продолжения падения
-    sellSignal: 'profit || ((!sma || !ema) && (!macd || (!rsi && !williams)))',
+    // Продажа: прибыль или разворот тренда
+    sellSignal: 'profit || (sma && ema)',
     
-    description: 'НЛМК: стратегия разворота для недооцененной бумаги в медвежьем тренде, ' +
-      'ожидание появления энергии роста'
+    description: 'НЛМК: упрощенная стратегия для стального сектора'
   }
 };

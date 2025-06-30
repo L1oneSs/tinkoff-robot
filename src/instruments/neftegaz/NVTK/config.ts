@@ -23,8 +23,12 @@ export const NVTK_CONFIG: BaseInstrumentConfig = {
     supertrend: { period: 10, multiplier: 3.0 }
   },
   triggers: {
-    buySignal: '(sma && ema && adx) && (macd || bollinger) && !rsi',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && !macd) || (!adx && supertrend)',
-    description: 'СПГ-лидер с глобальным потенциалом арктических проектов'
+    // Покупка: тренд + подтверждение
+    buySignal: '(sma || ema) && (adx || macd)',
+    
+    // Продажа: прибыль или разворот
+    sellSignal: 'profit || (sma && ema)',
+    
+    description: 'НОВАТЭК: упрощенная стратегия для газового лидера'
   }
 };

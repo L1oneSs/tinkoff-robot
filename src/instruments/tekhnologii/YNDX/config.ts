@@ -23,8 +23,12 @@ export const YNDX_CONFIG: BaseInstrumentConfig = {
     stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 }
   },
   triggers: {
-    buySignal: '(sma && ema && adx && supertrend) && (rsi || (bollinger && stochastic)) && !macd',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && macd) || (!adx && !supertrend) || (bollinger && stochastic)',
-    description: 'AI-инфраструктурная стратегия для высокотехнологичного роста'
+    // Покупка: простой тренд + подтверждение
+    buySignal: '(sma || ema) && (rsi || macd)',
+    
+    // Продажа: прибыль или разворот тренда  
+    sellSignal: 'profit || (sma && ema)',
+    
+    description: 'Яндекс: упрощенная стратегия для волатильной IT-бумаги'
   }
 };

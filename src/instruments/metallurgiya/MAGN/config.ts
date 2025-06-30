@@ -22,8 +22,12 @@ export const MAGN_CONFIG: BaseInstrumentConfig = {
     williams: { period: 14, overboughtLevel: -20, oversoldLevel: -80 }
   },
   triggers: {
-    buySignal: '(sma && ema && macd) && (bollinger || !williams) && !rsi',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && williams) || !macd',
-    description: 'Интегрированный металлургический комплекс с полным циклом производства'
+    // Покупка: тренд + любое подтверждение
+    buySignal: '(sma || ema) && (macd || rsi)',
+    
+    // Продажа: прибыль или разворот
+    sellSignal: 'profit || (sma && ema)',
+    
+    description: 'Магнитогорский МК: упрощенная стратегия для металлургии'
   }
 };

@@ -22,8 +22,12 @@ export const PHOR_CONFIG: BaseInstrumentConfig = {
     adx: { period: 14, trendStrengthLevel: 25, strongTrendLevel: 40 }
   },
   triggers: {
-    buySignal: '(sma && ema && macd) && (adx || bollinger) && !rsi',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && !macd) || (!adx && !bollinger)',
-    description: 'Агрохимический гигант с глобальным спросом на удобрения'
+    // Покупка: любой из трендовых + осциллятор
+    buySignal: '(sma || ema || macd) && (rsi || bollinger)',
+    
+    // Продажа: прибыль или все трендовые против
+    sellSignal: 'profit || (sma && ema && macd)',
+    
+    description: 'ФосАгро: реалистичные условия для агросектора'
   }
 };

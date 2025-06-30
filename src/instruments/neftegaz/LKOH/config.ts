@@ -27,24 +27,12 @@ export const LKOH_CONFIG: BaseInstrumentConfig = {
     move: { length: 7, threshold: 1.5, filterLevel: 0.5 }
   },
   triggers: {
-    buySignal: `
-      adx && sma && ema && macd && psar && 
-      (rsi && stochastic && williams) && 
-      bollinger && roc && move
-    `,
+    // Покупка: тренд + любой осциллятор
+    buySignal: '(sma || ema) && (rsi || stochastic || adx)',
     
-    sellSignal: `
-      profit || 
-      (!adx && (!sma || !ema || !psar) && 
-       (!rsi || !stochastic || !williams || !bollinger))
-    `,
+    // Продажа: фиксация прибыли или разворот тренда
+    sellSignal: 'profit || (sma && ema)',
     
-    description: `
-      ЛУКОЙЛ: Консервативная дивидендная стратегия
-      • Высокая цена требует осторожности
-      • Санкционные и кибер-риски
-      • Множественное подтверждение сигналов
-      • Приоритет защиты капитала над доходностью
-    `
+    description: 'ЛУКОЙЛ: упрощенная стратегия с реалистичными условиями'
   }
 };

@@ -23,11 +23,11 @@ export const GAZP_CONFIG: BaseInstrumentConfig = {
     move: { length: 21, threshold: 0, filterLevel: 0.4 }
   },
   triggers: {
-    // Покупка: ОЧЕНЬ строгие условия из-за фундаментальных проблем
-    buySignal: '(sma && ema) && psar && macd && adx && (rsi || stochastic) && (bollinger || move)',
+    // Покупка: базовые условия для Газпрома
+    buySignal: '(sma || ema) && (rsi || stochastic)',
     
-    // Продажа: агрессивная защита от структурных рисков
-    sellSignal: 'profit || (!psar || (!sma && !ema) || (!macd && !adx) || (rsi && stochastic))',
+    // Продажа: фиксация прибыли или сильный разворот
+    sellSignal: 'profit || (sma && ema && psar)',
     
     description: 'Газпром: крайне осторожная стратегия для компании в структурном кризисе, ' +
       'ожидание пробоя 132₽ с объемом'

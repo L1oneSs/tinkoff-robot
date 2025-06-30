@@ -22,13 +22,12 @@ export const TATN_CONFIG: BaseInstrumentConfig = {
     cci: { period: 18, upperLevel: 110, lowerLevel: -110 }
   },
   triggers: {
-    // Покупка: тренд + множественное подтверждение осцилляторов
-    buySignal: '(sma || ema) && rsi && (williams || cci) && adx',
+    // Покупка: тренд + любой осциллятор
+    buySignal: '(sma || ema) && (rsi || williams || adx)',
     
-    // Продажа: защита прибыли или сильный разворотный сигнал
-    sellSignal: 'profit || (!sma && !ema && (!rsi || !williams) && macd)',
+    // Продажа: прибыль или разворот тренда
+    sellSignal: 'profit || (sma && ema)',
     
-    description: 'Татнефть: сбалансированная стратегия с учетом дивидендной политики ' +
-      'и операционной эффективности ТАНЭКО'
+    description: 'Татнефть: упрощенная стратегия для дивидендной нефтянки'
   }
 };

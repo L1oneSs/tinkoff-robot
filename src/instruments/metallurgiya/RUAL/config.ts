@@ -23,13 +23,12 @@ export const RUAL_CONFIG: BaseInstrumentConfig = {
     williams: { period: 14, overboughtLevel: -15, oversoldLevel: -85 }
   },
   triggers: {
-    // Покупка: ждем сильного подтверждения разворота от множественных индикаторов
-    buySignal: 'supertrend && (sma || ema) && macd && (rsi || williams || cci) && (roc || bollinger)',
+    // Покупка: тренд + подтверждение
+    buySignal: '(sma || ema) && (supertrend || macd) && (rsi || williams)',
     
-    // Продажа: быстрая фиксация прибыли + защита от санкционных/операционных рисков
-    sellSignal: 'profit || (!supertrend || (!sma && !ema) || (!macd && (rsi && cci)))',
+    // Продажа: прибыль или разворот тренда
+    sellSignal: 'profit || (sma && ema)',
     
-    description: 'РУСАЛ: сбалансированная стратегия для санкционной бумаги с учетом геополитических рисков ' +
-      'и потенциала разворота'
+    description: 'РУСАЛ: упрощенная стратегия для алюминиевого гиганта'
   }
 };

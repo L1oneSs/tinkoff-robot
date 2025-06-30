@@ -27,26 +27,12 @@ export const ROSN_CONFIG: BaseInstrumentConfig = {
     move: { length: 7, threshold: 1.2, filterLevel: 0.3 }
   },
   triggers: {
-    // АГРЕССИВНАЯ покупка: подтверждение тренда + momentum
-    buySignal: `
-      adx && (sma || ema) && macd && 
-      (rsi || stochastic || williams) && 
-      (bollinger || psar) && move
-    `,
+    // Покупка: базовый тренд + подтверждение
+    buySignal: '(sma || ema) && (macd || adx) && (rsi || williams)',
     
-    // АКТИВНАЯ продажа: profit-taking или ослабление тренда
-    sellSignal: `
-      profit || 
-      (!adx && (!sma || !ema) && (!macd || !psar) && 
-       (rsi || stochastic || williams))
-    `,
+    // Продажа: прибыль или разворот тренда
+    sellSignal: 'profit || (sma && ema)',
     
-    description: `
-      РОСНЕФТЬ: Агрессивная ростовая стратегия
-      • Лидер по прибыльности российского рынка
-      • Максимальная диверсификация и инвестиции
-      • Быстрая реакция на рыночные сигналы
-      • Высокий потенциал роста в нефтегазовом секторе
-    `
+    description: 'Роснефть: упрощенная стратегия для нефтяного лидера'
   }
 };

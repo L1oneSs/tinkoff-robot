@@ -22,13 +22,12 @@ export const GMKN_CONFIG: BaseInstrumentConfig = {
     stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 }
   },
   triggers: {
-    // Покупка: множественное подтверждение тренда + сырьевой momentum + техническое подтверждение
-    buySignal: '(sma || ema) && adx && macd && (rsi || williams || stochastic) && bollinger',
+    // Покупка: базовый тренд + подтверждение силы
+    buySignal: '(sma || ema) && (adx || macd) && (rsi || williams)',
     
-    // Продажа: быстрая фиксация прибыли + защита от волатильности
-    sellSignal: 'profit || ((!sma && !ema) || (!adx && !macd) || (rsi && williams && stochastic))',
+    // Продажа: прибыль или разворот
+    sellSignal: 'profit || (sma && ema)',
     
-    description: 'Норникель: сбалансированная стратегия для сырьевого цикла с учетом корпоративных рисков ' +
-      'и отсутствия дивидендов'
+    description: 'Норникель: упрощенная стратегия для сырьевого актива'
   }
 };

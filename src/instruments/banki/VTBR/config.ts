@@ -21,11 +21,11 @@ export const VTBR_CONFIG: BaseInstrumentConfig = {
     bollinger: { length: 20, stdDev: 2.2 } 
   },
   triggers: {
-    // Покупка: быстрый вход по тренду + импульсные осцилляторы Williams
-    buySignal: '(sma || ema) && macd && (ao || ac || (rsi && bollinger))',
+    // Покупка: любой тренд + любой осциллятор
+    buySignal: '(sma || ema) && (ao || ac || rsi)',
     
-    // Продажа: агрессивная фиксация прибыли + первые признаки разворота
-    sellSignal: 'profit || ((!sma && !ema) || (!macd && (!ao && !ac)))',
+    // Продажа: прибыль или два индикатора против
+    sellSignal: 'profit || (sma && ema)',
     
     description: 'ВТБ: агрессивная стратегия с быстрыми сигналами, ориентация на краткосрочные движения ' +
       'и защита от отката'
