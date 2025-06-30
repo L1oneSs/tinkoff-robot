@@ -201,7 +201,14 @@ export class ReportGenerator {
   /**
    * Отрисовка линии прибыли
    */
-  private drawProfitLine(context: any, profitData: number[], width: number, height: number, minProfit: number, maxProfit: number) {
+  private drawProfitLine(
+    context: any, 
+    profitData: number[], 
+    width: number, 
+    height: number, 
+    minProfit: number, 
+    maxProfit: number
+  ) {
     // Дневная прибыль (синяя линия)
     context.strokeStyle = '#2196F3';
     context.lineWidth = 3;
@@ -341,7 +348,14 @@ export class ReportGenerator {
   /**
    * Отрисовка секторов круговой диаграммы
    */
-  private drawPieSlices(context: any, entries: [string, number][], total: number, centerX: number, centerY: number, radius: number) {
+  private drawPieSlices(
+    context: any, 
+    entries: [string, number][], 
+    total: number, 
+    centerX: number, 
+    centerY: number, 
+    radius: number
+  ) {
     const colors = entries.map((_, index) => {
       const hue = (index * 137.508) % 360;
       return `hsl(${hue}, 70%, 60%)`;
@@ -371,7 +385,14 @@ export class ReportGenerator {
   /**
    * Отрисовка легенды для графика сигналов
    */
-  private drawSignalsLegend(context: any, entries: [string, number][], total: number, centerX: number, centerY: number, radius: number) {
+  private drawSignalsLegend(
+    context: any, 
+    entries: [string, number][], 
+    total: number, 
+    centerX: number, 
+    centerY: number, 
+    radius: number
+  ) {
     const colors = entries.map((_, index) => {
       const hue = (index * 137.508) % 360;
       return `hsl(${hue}, 70%, 60%)`;
