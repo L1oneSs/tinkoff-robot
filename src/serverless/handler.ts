@@ -6,6 +6,7 @@ import { TinkoffInvestApi } from 'tinkoff-invest-api';
 import { Logger } from '@vitalets/logger';
 import { Robot, RobotConfig } from '../robot.js';
 import { config } from '../config.js';
+import { SimpleReportSender } from '../reports/simple-reporter.js';
 
 fixConsoleForLogging();
 
@@ -23,6 +24,7 @@ const configOverwrite: Partial<RobotConfig> = {
 
 export const handler: Handler<TimerMessage> = async event => {
   try {
+    // Сначала запускаем торгового робота
     const finalConfig = { ...config, ...configOverwrite };
     logger.log('Конфигурация робота:', {
       useRealAccount: finalConfig.useRealAccount,
@@ -32,6 +34,11 @@ export const handler: Handler<TimerMessage> = async event => {
     
     const robot = new Robot(api, finalConfig);
     await robot.runOnce();
+    
+    // После торговли проверяем время и отправляем отчёты если нужно
+    const reportSender = new SimpleReportSender();
+    await reportSender.checkAndSendReports();
+    
   } catch (e) {
     throw attachEventToError(e, event);
   }
