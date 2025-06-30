@@ -31,9 +31,8 @@
     "@debut/indicators": "^1.3.5",
     "@types/node-telegram-bot-api": "^0.64.9",
     "@vitalets/logger": "^2.1.1",
-    "canvas": "^3.1.2",
-    "chart.js": "^4.5.0",
     "node-telegram-bot-api": "^0.66.0",
+    "plotly": "^1.0.6",
     "tinkoff-invest-api": "^2.4.7",
     "tsx": "^4.20.3",
     "yandex-cloud-fn": "^2.4.0"

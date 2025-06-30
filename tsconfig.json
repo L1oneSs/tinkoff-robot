@@ -10,7 +10,9 @@
     "moduleResolution": "node",
     "allowJs": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [ "src", "scripts" ]
 }

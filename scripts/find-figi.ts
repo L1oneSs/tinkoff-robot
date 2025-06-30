@@ -21,7 +21,7 @@ function printInstruments(instruments: (Share | Bond | Etf)[]) {
     console.log(`📊 ${index + 1}. ${instrument.name}`);
     console.log(`   Тикер: ${instrument.ticker}`);
     console.log(`   FIGI: ${instrument.figi}`);
-    console.log(`   Класс: ${'instrumentType' in instrument ? instrument.instrumentType : 'Неизвестно'}`);
+    console.log(`   Класс: ${(instrument as any).instrumentType || 'Неизвестно'}`);
     console.log(`   Валюта: ${instrument.currency}`);
     console.log(`   Биржа: ${instrument.exchange}`);
     console.log(`   Торговля доступна: ${instrument.tradingStatus === 1 ? 'Да' : 'Нет'}`);
