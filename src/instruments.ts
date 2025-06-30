@@ -197,7 +197,6 @@ export const INSTRUMENTS: Record<string, InstrumentInfo> = {
     sector: 'Авиаперевозки'
   },
 
-
   // Финансовые услуги
   MOEX: {
     figi: 'BBG004730JJ5',
