@@ -1,9 +1,7 @@
 import { DailyStats, WeeklyStats, TradeRecord } from '../trade-tracker';
 import { join } from 'path';
 import { Logger } from '@vitalets/logger';
-import * as d3 from 'd3';
 import { createCanvas } from 'canvas';
-import { JSDOM } from 'jsdom';
 
 export interface ReportConfig {
   includeCharts: boolean;
@@ -148,180 +146,98 @@ export class ReportGenerator {
       const canvas = createCanvas(this.config.chartWidth, this.config.chartHeight);
       const context = canvas.getContext('2d');
       
-      // Настройка холста
-      context.fillStyle = 'white';
-      context.fillRect(0, 0, this.config.chartWidth, this.config.chartHeight);
+      this.drawProfitChart(context, stats);
       
-      // Подготовка данных
-      const labels = stats.dailyStats.map(day => {
-        const date = new Date(day.date);
-        return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
-      });
-      
-      const profitData = stats.dailyStats.map(day => day.totalProfit);
-      const cumulativeData = [];
-      let cumulative = 0;
-      for (const profit of profitData) {
-        cumulative += profit;
-        cumulativeData.push(cumulative);
-      }
-      
-      // Размеры графика
-      const margin = { top: 50, right: 80, bottom: 60, left: 80 };
-      const width = this.config.chartWidth - margin.left - margin.right;
-      const height = this.config.chartHeight - margin.top - margin.bottom;
-      
-      // Шкалы
-      const xScale = d3.scaleBand()
-        .domain(labels)
-        .range([0, width])
-        .padding(0.1);
-      
-      const yScale1 = d3.scaleLinear()
-        .domain(d3.extent(profitData) as [number, number])
-        .nice()
-        .range([height, 0]);
-      
-      const yScale2 = d3.scaleLinear()
-        .domain(d3.extent(cumulativeData) as [number, number])
-        .nice()
-        .range([height, 0]);
-      
-      // Линия для дневной прибыли
-      const line1 = d3.line<number>()
-        .x((d, i) => (xScale(labels[i]) || 0) + xScale.bandwidth() / 2)
-        .y(d => yScale1(d))
-        .curve(d3.curveMonotoneX);
-      
-      // Линия для накопительной прибыли
-      const line2 = d3.line<number>()
-        .x((d, i) => (xScale(labels[i]) || 0) + xScale.bandwidth() / 2)
-        .y(d => yScale2(d))
-        .curve(d3.curveMonotoneX);
-      
-      // Рисуем график
-      context.save();
-      context.translate(margin.left, margin.top);
-      
-      // Заголовок
-      context.fillStyle = '#333';
-      context.font = 'bold 16px Arial';
-      context.textAlign = 'center';
-      context.fillText(`Прибыль за неделю (${stats.weekStart} — ${stats.weekEnd})`, width / 2, -20);
-      
-      // Оси
-      context.strokeStyle = '#ccc';
-      context.lineWidth = 1;
-      
-      // Вертикальные линии сетки
-      labels.forEach((label, i) => {
-        const x = (xScale(label) || 0) + xScale.bandwidth() / 2;
-        context.beginPath();
-        context.moveTo(x, 0);
-        context.lineTo(x, height);
-        context.stroke();
-      });
-      
-      // Горизонтальные линии сетки
-      const yTicks = yScale1.ticks(5);
-      yTicks.forEach(tick => {
-        const y = yScale1(tick);
-        context.beginPath();
-        context.moveTo(0, y);
-        context.lineTo(width, y);
-        context.stroke();
-      });
-      
-      // Дневная прибыль (синяя линия)
-      context.strokeStyle = '#2196F3';
-      context.lineWidth = 3;
-      context.beginPath();
-      profitData.forEach((d, i) => {
-        const x = (xScale(labels[i]) || 0) + xScale.bandwidth() / 2;
-        const y = yScale1(d);
-        if (i === 0) {
-          context.moveTo(x, y);
-        } else {
-          context.lineTo(x, y);
-        }
-      });
-      context.stroke();
-      
-      // Точки для дневной прибыли
-      context.fillStyle = '#2196F3';
-      profitData.forEach((d, i) => {
-        const x = (xScale(labels[i]) || 0) + xScale.bandwidth() / 2;
-        const y = yScale1(d);
-        context.beginPath();
-        context.arc(x, y, 4, 0, 2 * Math.PI);
-        context.fill();
-      });
-      
-      // Накопительная прибыль (красная линия)
-      context.strokeStyle = '#F44336';
-      context.lineWidth = 3;
-      context.beginPath();
-      cumulativeData.forEach((d, i) => {
-        const x = (xScale(labels[i]) || 0) + xScale.bandwidth() / 2;
-        const y = yScale2(d);
-        if (i === 0) {
-          context.moveTo(x, y);
-        } else {
-          context.lineTo(x, y);
-        }
-      });
-      context.stroke();
-      
-      // Точки для накопительной прибыли
-      context.fillStyle = '#F44336';
-      cumulativeData.forEach((d, i) => {
-        const x = (xScale(labels[i]) || 0) + xScale.bandwidth() / 2;
-        const y = yScale2(d);
-        context.beginPath();
-        context.arc(x, y, 4, 0, 2 * Math.PI);
-        context.fill();
-      });
-      
-      // Подписи осей
-      context.fillStyle = '#333';
-      context.font = '12px Arial';
-      context.textAlign = 'center';
-      
-      // Подписи X
-      labels.forEach((label, i) => {
-        const x = (xScale(label) || 0) + xScale.bandwidth() / 2;
-        context.fillText(label, x, height + 20);
-      });
-      
-      // Подписи Y (левая ось)
-      context.textAlign = 'right';
-      yTicks.forEach(tick => {
-        const y = yScale1(tick);
-        context.fillText(tick.toFixed(0), -10, y + 4);
-      });
-      
-      // Легенда
-      context.fillStyle = '#2196F3';
-      context.fillRect(width - 150, -10, 15, 3);
-      context.fillStyle = '#333';
-      context.font = '12px Arial';
-      context.textAlign = 'left';
-      context.fillText('Дневная прибыль', width - 130, -5);
-      
-      context.fillStyle = '#F44336';
-      context.fillRect(width - 150, 10, 15, 3);
-      context.fillStyle = '#333';
-      context.fillText('Накопительная', width - 130, 15);
-      
-      context.restore();
-      
-      this.logger.info('График прибыли создан успешно с помощью D3.js');
+      this.logger.info('График прибыли создан успешно');
       return canvas.toBuffer('image/png');
       
     } catch (error) {
       this.logger.error('Ошибка создания графика прибыли:', error);
       throw error;
     }
+  }
+
+  /**
+   * Отрисовка графика прибыли
+   */
+  private drawProfitChart(context: any, stats: WeeklyStats) {
+    // Настройка холста
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, this.config.chartWidth, this.config.chartHeight);
+    
+    // Подготовка данных
+    const profitData = stats.dailyStats.map(day => day.totalProfit);
+    
+    // Размеры графика
+    const margin = { top: 50, right: 80, bottom: 60, left: 80 };
+    const width = this.config.chartWidth - margin.left - margin.right;
+    const height = this.config.chartHeight - margin.top - margin.bottom;
+    
+    // Простые шкалы
+    const minProfit = Math.min(...profitData);
+    const maxProfit = Math.max(...profitData);
+    
+    // Рисуем график
+    context.save();
+    context.translate(margin.left, margin.top);
+    
+    this.drawProfitTitle(context, width, stats);
+    this.drawProfitLine(context, profitData, width, height, minProfit, maxProfit);
+    this.drawProfitLegend(context, width);
+    
+    context.restore();
+  }
+
+  /**
+   * Отрисовка заголовка графика прибыли
+   */
+  private drawProfitTitle(context: any, width: number, stats: WeeklyStats) {
+    context.fillStyle = '#333';
+    context.font = 'bold 16px Arial';
+    context.textAlign = 'center';
+    context.fillText(`Прибыль за неделю (${stats.weekStart} — ${stats.weekEnd})`, width / 2, -20);
+  }
+
+  /**
+   * Отрисовка линии прибыли
+   */
+  private drawProfitLine(context: any, profitData: number[], width: number, height: number, minProfit: number, maxProfit: number) {
+    // Дневная прибыль (синяя линия)
+    context.strokeStyle = '#2196F3';
+    context.lineWidth = 3;
+    context.beginPath();
+    profitData.forEach((profit, index) => {
+      const x = (index / (profitData.length - 1)) * width;
+      const y = height - ((profit - minProfit) / (maxProfit - minProfit)) * height;
+      if (index === 0) {
+        context.moveTo(x, y);
+      } else {
+        context.lineTo(x, y);
+      }
+    });
+    context.stroke();
+    
+    // Точки для дневной прибыли
+    context.fillStyle = '#2196F3';
+    profitData.forEach((profit, index) => {
+      const x = (index / (profitData.length - 1)) * width;
+      const y = height - ((profit - minProfit) / (maxProfit - minProfit)) * height;
+      context.beginPath();
+      context.arc(x, y, 4, 0, 2 * Math.PI);
+      context.fill();
+    });
+  }
+
+  /**
+   * Отрисовка легенды графика прибыли
+   */
+  private drawProfitLegend(context: any, width: number) {
+    context.fillStyle = '#2196F3';
+    context.fillRect(width - 150, -10, 15, 3);
+    context.fillStyle = '#333';
+    context.font = '12px Arial';
+    context.textAlign = 'left';
+    context.fillText('Дневная прибыль', width - 130, -5);
   }
 
   /**
@@ -336,120 +252,147 @@ export class ReportGenerator {
       const canvas = createCanvas(this.config.chartWidth, this.config.chartHeight);
       const context = canvas.getContext('2d');
       
-      // Настройка холста
-      context.fillStyle = 'white';
-      context.fillRect(0, 0, this.config.chartWidth, this.config.chartHeight);
-
-      let signalsData: Record<string, number>;
-      let title: string;
-
-      if ('dailyStats' in stats) {
-        // Это еженедельная статистика
-        signalsData = {};
-        stats.dailyStats.forEach(day => {
-          Object.entries(day.signalsUsed).forEach(([signal, count]) => {
-            signalsData[signal] = (signalsData[signal] || 0) + count;
-          });
-        });
-        title = `Использование сигналов за неделю (${stats.weekStart} — ${stats.weekEnd})`;
-      } else {
-        // Это дневная статистика
-        signalsData = stats.signalsUsed;
-        title = `Использование сигналов за ${stats.date}`;
-      }
-
-      const entries = Object.entries(signalsData);
-      if (entries.length === 0) {
-        // Если нет данных, создаем пустой график
-        context.fillStyle = '#333';
-        context.font = 'bold 16px Arial';
-        context.textAlign = 'center';
-        context.fillText('Нет данных о сигналах', this.config.chartWidth / 2, this.config.chartHeight / 2);
-        return canvas.toBuffer('image/png');
-      }
-
-      const total = entries.reduce((sum, [, count]) => sum + count, 0);
+      this.drawSignalsChart(context, stats);
       
-      // Центр круга
-      const centerX = this.config.chartWidth / 2;
-      const centerY = (this.config.chartHeight - 60) / 2 + 30; // Оставляем место для заголовка
-      const radius = Math.min(this.config.chartWidth, this.config.chartHeight - 120) / 3;
-      
-      // Заголовок
-      context.fillStyle = '#333';
-      context.font = 'bold 16px Arial';
-      context.textAlign = 'center';
-      context.fillText(title, centerX, 30);
-      
-      // Генерируем цвета для каждого сигнала
-      const colors = entries.map((_, index) => {
-        const hue = (index * 137.508) % 360; // Золотое сечение для равномерного распределения цветов
-        return `hsl(${hue}, 70%, 60%)`;
-      });
-      
-      let currentAngle = -Math.PI / 2; // Начинаем сверху
-      
-      // Рисуем секторы
-      entries.forEach(([signal, count], index) => {
-        const sliceAngle = (count / total) * 2 * Math.PI;
-        const endAngle = currentAngle + sliceAngle;
-        
-        // Рисуем сектор
-        context.fillStyle = colors[index];
-        context.beginPath();
-        context.moveTo(centerX, centerY);
-        context.arc(centerX, centerY, radius, currentAngle, endAngle);
-        context.closePath();
-        context.fill();
-        
-        // Обводка
-        context.strokeStyle = '#fff';
-        context.lineWidth = 2;
-        context.stroke();
-        
-        // Подпись процента
-        if (sliceAngle > 0.1) { // Показываем только если сектор достаточно большой
-          const labelAngle = currentAngle + sliceAngle / 2;
-          const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
-          const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
-          
-          const percentage = ((count / total) * 100).toFixed(1);
-          context.fillStyle = '#fff';
-          context.font = 'bold 12px Arial';
-          context.textAlign = 'center';
-          context.fillText(`${percentage}%`, labelX, labelY);
-        }
-        
-        currentAngle = endAngle;
-      });
-      
-      // Легенда
-      const legendStartY = centerY + radius + 30;
-      const legendItemHeight = 20;
-      
-      context.font = '12px Arial';
-      context.textAlign = 'left';
-      
-      entries.forEach(([signal, count], index) => {
-        const y = legendStartY + index * legendItemHeight;
-        
-        // Цветной квадрат
-        context.fillStyle = colors[index];
-        context.fillRect(centerX - 150, y - 10, 12, 12);
-        
-        // Текст
-        context.fillStyle = '#333';
-        const percentage = ((count / total) * 100).toFixed(1);
-        context.fillText(`${signal}: ${count} (${percentage}%)`, centerX - 130, y);
-      });
-      
-      this.logger.info('График сигналов создан успешно с помощью D3.js');
+      this.logger.info('График сигналов создан успешно');
       return canvas.toBuffer('image/png');
       
     } catch (error) {
       this.logger.error('Ошибка создания графика сигналов:', error);
       throw error;
     }
+  }
+
+  /**
+   * Отрисовка графика сигналов
+   */
+  private drawSignalsChart(context: any, stats: DailyStats | WeeklyStats) {
+    // Настройка холста
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, this.config.chartWidth, this.config.chartHeight);
+
+    const { signalsData, title } = this.prepareSignalsData(stats);
+    const entries = Object.entries(signalsData);
+    
+    if (entries.length === 0) {
+      this.drawEmptySignalsChart(context);
+      return;
+    }
+
+    this.drawSignalsPieChart(context, entries, title);
+  }
+
+  /**
+   * Подготовка данных для графика сигналов
+   */
+  private prepareSignalsData(stats: DailyStats | WeeklyStats) {
+    let signalsData: Record<string, number>;
+    let title: string;
+
+    if ('dailyStats' in stats) {
+      // Это еженедельная статистика
+      signalsData = {};
+      stats.dailyStats.forEach(day => {
+        Object.entries(day.signalsUsed).forEach(([signal, count]) => {
+          signalsData[signal] = (signalsData[signal] || 0) + count;
+        });
+      });
+      title = `Использование сигналов за неделю (${stats.weekStart} — ${stats.weekEnd})`;
+    } else {
+      // Это дневная статистика
+      signalsData = stats.signalsUsed;
+      title = `Использование сигналов за ${stats.date}`;
+    }
+
+    return { signalsData, title };
+  }
+
+  /**
+   * Отрисовка пустого графика сигналов
+   */
+  private drawEmptySignalsChart(context: any) {
+    context.fillStyle = '#333';
+    context.font = 'bold 16px Arial';
+    context.textAlign = 'center';
+    context.fillText('Нет данных о сигналах', this.config.chartWidth / 2, this.config.chartHeight / 2);
+  }
+
+  /**
+   * Отрисовка круговой диаграммы сигналов
+   */
+  private drawSignalsPieChart(context: any, entries: [string, number][], title: string) {
+    const total = entries.reduce((sum, [, count]) => sum + count, 0);
+    
+    // Центр круга
+    const centerX = this.config.chartWidth / 2;
+    const centerY = (this.config.chartHeight - 60) / 2 + 30;
+    const radius = Math.min(this.config.chartWidth, this.config.chartHeight - 120) / 3;
+    
+    // Заголовок
+    context.fillStyle = '#333';
+    context.font = 'bold 16px Arial';
+    context.textAlign = 'center';
+    context.fillText(title, centerX, 30);
+    
+    this.drawPieSlices(context, entries, total, centerX, centerY, radius);
+    this.drawSignalsLegend(context, entries, total, centerX, centerY, radius);
+  }
+
+  /**
+   * Отрисовка секторов круговой диаграммы
+   */
+  private drawPieSlices(context: any, entries: [string, number][], total: number, centerX: number, centerY: number, radius: number) {
+    const colors = entries.map((_, index) => {
+      const hue = (index * 137.508) % 360;
+      return `hsl(${hue}, 70%, 60%)`;
+    });
+    
+    let currentAngle = -Math.PI / 2;
+    
+    entries.forEach(([, count], index) => {
+      const sliceAngle = (count / total) * 2 * Math.PI;
+      const endAngle = currentAngle + sliceAngle;
+      
+      context.fillStyle = colors[index];
+      context.beginPath();
+      context.moveTo(centerX, centerY);
+      context.arc(centerX, centerY, radius, currentAngle, endAngle);
+      context.closePath();
+      context.fill();
+      
+      context.strokeStyle = '#fff';
+      context.lineWidth = 2;
+      context.stroke();
+      
+      currentAngle = endAngle;
+    });
+  }
+
+  /**
+   * Отрисовка легенды для графика сигналов
+   */
+  private drawSignalsLegend(context: any, entries: [string, number][], total: number, centerX: number, centerY: number, radius: number) {
+    const colors = entries.map((_, index) => {
+      const hue = (index * 137.508) % 360;
+      return `hsl(${hue}, 70%, 60%)`;
+    });
+    
+    const legendStartY = centerY + radius + 30;
+    const legendItemHeight = 20;
+    
+    context.font = '12px Arial';
+    context.textAlign = 'left';
+    
+    entries.forEach(([signalName, count], index) => {
+      const y = legendStartY + index * legendItemHeight;
+      
+      context.fillStyle = colors[index];
+      context.fillRect(centerX - 150, y - 10, 12, 12);
+      
+      context.fillStyle = '#333';
+      const percentage = ((count / total) * 100).toFixed(1);
+      context.fillText(`${signalName}: ${count} (${percentage}%)`, centerX - 130, y);
+    });
   }
 
   /**
