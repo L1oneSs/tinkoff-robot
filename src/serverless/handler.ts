@@ -3,10 +3,13 @@
  */
 import { Handler, TimerMessage, fixConsoleForLogging } from 'yandex-cloud-fn';
 import { TinkoffInvestApi } from 'tinkoff-invest-api';
+import { Logger } from '@vitalets/logger';
 import { Robot, RobotConfig } from '../robot.js';
 import { config } from '../config.js';
 
 fixConsoleForLogging();
+
+const logger = new Logger({ prefix: '[Handler]:', level: 'info' });
 
 const api = new TinkoffInvestApi({
   token: process.env.TINKOFF_API_TOKEN!,
@@ -21,7 +24,7 @@ const configOverwrite: Partial<RobotConfig> = {
 export const handler: Handler<TimerMessage> = async event => {
   try {
     const finalConfig = { ...config, ...configOverwrite };
-    console.log('[Handler]: Конфигурация робота:', {
+    logger.log('Конфигурация робота:', {
       useRealAccount: finalConfig.useRealAccount,
       dryRun: finalConfig.dryRun,
       strategiesCount: finalConfig.strategies.length
