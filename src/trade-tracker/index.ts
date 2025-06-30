@@ -56,6 +56,7 @@ export interface WeeklyStats {
 export class TradeTracker {
   private logger: Logger;
   private tradesFilePath: string;
+  private tradesMemory: TradeRecord[] = []; // In-memory хранение для serverless
 
   constructor() {
     this.logger = new Logger({ prefix: '[TradeTracker]:', level: 'info' });
@@ -63,6 +64,23 @@ export class TradeTracker {
     const isServerless = this.isServerlessEnvironment();
     const baseDir = isServerless ? '/tmp' : process.cwd();
     this.tradesFilePath = join(baseDir, 'trades.json');
+    
+    // В Yandex Cloud всегда загружаем сделки в память при старте
+    if (this.isYandexCloud()) {
+      this.logger.info('Yandex Cloud обнаружен: используем in-memory хранение сделок');
+      this.restoreTradesFromEnv(); // Попытка восстановить сделки из переменной окружения
+    }
+  }
+
+  /**
+   * Определяет, запущен ли код в Yandex Cloud
+   */
+  private isYandexCloud(): boolean {
+    return !!(
+      process.env.YANDEX_CLOUD_FUNCTION_NAME ||
+      process.env.YANDEX_CLOUD_FUNCTION_VERSION ||
+      process.env._YANDEX_CLOUD_
+    );
   }
 
   /**
@@ -90,9 +108,20 @@ export class TradeTracker {
       sessionDate: this.formatDate(now),
     };
 
-    const trades = this.loadTrades();
-    trades.push(tradeRecord);
-    this.saveTrades(trades);
+    if (this.isYandexCloud()) {
+      // В Yandex Cloud используем память
+      this.tradesMemory.push(tradeRecord);
+      this.saveTradestoEnv(); // Сохраняем в переменную окружения
+      this.logger.info(`[YANDEX] Сделка записана в память: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`);
+      
+      // Также логируем в формате, который можно будет парсить
+      this.logger.info(`[TRADE_DATA]: ${JSON.stringify(tradeRecord)}`);
+    } else {
+      // Обычная файловая запись
+      const trades = this.loadTrades();
+      trades.push(tradeRecord);
+      this.saveTrades(trades);
+    }
 
     this.logger.info(`Записана сделка: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`);
     return tradeRecord;
@@ -102,6 +131,12 @@ export class TradeTracker {
    * Получить все сделки
    */
   loadTrades(): TradeRecord[] {
+    // В Yandex Cloud используем память
+    if (this.isYandexCloud()) {
+      return this.tradesMemory;
+    }
+
+    // Обычная файловая загрузка
     if (!existsSync(this.tradesFilePath)) {
       return [];
     }
@@ -154,6 +189,35 @@ export class TradeTracker {
    */
   getDailyStats(date: string): DailyStats {
     const trades = this.loadTrades().filter(trade => trade.sessionDate === date);
+    
+    // Логирование для отладки
+    if (this.isYandexCloud()) {
+      this.logger.info(`[YANDEX] Получение статистики за ${date}`);
+      this.logger.info(`[YANDEX] Всего сделок в памяти: ${this.tradesMemory.length}`);
+      this.logger.info(`[YANDEX] Сделок за дату ${date}: ${trades.length}`);
+      if (trades.length > 0) {
+        this.logger.info(`[YANDEX] Сделки: ${JSON.stringify(trades, null, 2)}`);
+      } else {
+        // В Yandex Cloud возвращаем заглушку с информацией о логах
+        this.logger.info('[YANDEX] Сделки не найдены в памяти. Проверьте логи Yandex Cloud для получения истории сделок.');
+        return {
+          date,
+          totalTrades: 0,
+          buyTrades: 0,
+          sellTrades: 0,
+          totalProfit: 0,
+          totalProfitPercent: 0,
+          totalCommission: 0,
+          instruments: [],
+          signalsUsed: {},
+          successfulTrades: 0,
+          losingTrades: 0,
+          averageProfit: 0,
+          bestTrade: null,
+          worstTrade: null
+        };
+      }
+    }
     
     const buyTrades = trades.filter(t => t.action === 'buy').length;
     const sellTrades = trades.filter(t => t.action === 'sell').length;
@@ -298,6 +362,43 @@ export class TradeTracker {
     return this.loadTrades().filter(trade => 
       trade.sessionDate >= mondayStr && trade.sessionDate <= sundayStr
     );
+  }
+
+  /**
+   * Восстановить сделки из логов (для Yandex Cloud)
+   * В serverless окружении можем восстанавливать сделки из переменных окружения
+   */
+  private restoreTradesFromEnv() {
+    if (!this.isYandexCloud()) return;
+
+    try {
+      // Попытка восстановить из переменной окружения
+      const tradesData = process.env.TRADES_DATA;
+      if (tradesData) {
+        const trades = JSON.parse(tradesData);
+        this.tradesMemory = trades.map((trade: any) => ({
+          ...trade,
+          timestamp: new Date(trade.timestamp),
+        }));
+        this.logger.info(`[YANDEX] Восстановлено ${this.tradesMemory.length} сделок из переменной окружения`);
+      }
+    } catch (error) {
+      this.logger.error('[YANDEX] Ошибка при восстановлении сделок из переменной:', error);
+    }
+  }
+
+  /**
+   * Сохранить сделки в переменную окружения (для Yandex Cloud)
+   */
+  private saveTradestoEnv() {
+    if (!this.isYandexCloud()) return;
+
+    try {
+      process.env.TRADES_DATA = JSON.stringify(this.tradesMemory);
+      this.logger.info(`[YANDEX] Сохранено ${this.tradesMemory.length} сделок в переменную окружения`);
+    } catch (error) {
+      this.logger.error('[YANDEX] Ошибка при сохранении сделок в переменную:', error);
+    }
   }
 
   private generateTradeId(): string {

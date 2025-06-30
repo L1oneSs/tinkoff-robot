@@ -40,7 +40,8 @@ export class ReportGenerator {
       process.env._HANDLER ||
       process.env.LAMBDA_TASK_ROOT ||
       process.env.YANDEX_CLOUD_FUNCTION_NAME ||
-      process.env.YANDEX_CLOUD_FUNCTION_VERSION
+      process.env.YANDEX_CLOUD_FUNCTION_VERSION ||
+      process.env._YANDEX_CLOUD_
     );
   }
 
@@ -54,6 +55,12 @@ export class ReportGenerator {
       : '0.0';
     
     let report = `🤖 *Ежедневный отчет за ${stats.date}*\n\n`;
+    
+    // В serverless окружении добавляем информацию о логах
+    if (this.isServerlessEnvironment() && stats.totalTrades === 0) {
+      report += `📋 *Информация:* В Yandex Cloud Functions статистика может быть неполной.\n`;
+      report += `🔍 Для получения полной истории сделок проверьте логи функции.\n\n`;
+    }
     
     // Основные метрики
     report += `💰 *Прибыль:* ${stats.totalProfit.toFixed(2)} руб. ${profitEmoji}\n`;
