@@ -1,6 +1,7 @@
 /**
- * Конфигурация для Яндекса (YNDX)
- * Сектор: Технологии
+ * Конфигурация для Nebius Group (YNDX)
+ * Сектор: Технологии / AI-инфраструктура
+ * Статус: Трансформация в лидера AI-облачных решений
  */
 
 import { INSTRUMENTS } from '../../../instruments.js';
@@ -9,21 +10,21 @@ import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js'
 export const YNDX_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
   figi: INSTRUMENTS.YNDX.figi,
-  enabled: false, // Пока отключен из-за высокой волатильности
   orderLots: 1,
   signals: {
-    profit: { takeProfit: 25, stopLoss: 12 }, // Очень волатильная бумага
-    sma: { fastLength: 5, slowLength: 10 }, // Быстрые сигналы
-    rsi: { period: 7, highLevel: 85, lowLevel: 15 }, // Экстремальные уровни
-    cci: { period: 14, upperLevel: 150, lowerLevel: -150 }, // Расширенные уровни
-    adx: { period: 10, trendStrengthLevel: 30, strongTrendLevel: 50 },
-    supertrend: { period: 8, multiplier: 4.0 } // Очень чувствительный
+    profit: { takeProfit: 3, stopLoss: 4 },
+    sma: { fastLength: 8, slowLength: 21 },
+    ema: { fastLength: 12, slowLength: 26 },
+    rsi: { period: 14, highLevel: 75, lowLevel: 25 },
+    macd: { fastLength: 12, slowLength: 26, signalLength: 9 },
+    bollinger: { length: 20, stdDev: 2.0 },
+    adx: { period: 14, trendStrengthLevel: 25, strongTrendLevel: 45 },
+    supertrend: { period: 10, multiplier: 3.0 },
+    stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 }
   },
   triggers: {
-    // Покупка: исключительно сильные сигналы от всех индикаторов
-    buySignal: 'adx && supertrend && sma && (rsi || cci)',
-    // Продажа: малейший негатив при такой волатильности
-    sellSignal: 'profit || (!adx || !supertrend || !sma || rsi || cci)',
-    description: 'Яндекс: экстремально осторожная стратегия для сверхволатильных технологий (ОТКЛЮЧЕНА)'
+    buySignal: '(sma && ema && adx && supertrend) && (rsi || (bollinger && stochastic)) && !macd',
+    sellSignal: 'profit || (!sma || !ema) || (rsi && macd) || (!adx && !supertrend) || (bollinger && stochastic)',
+    description: 'AI-инфраструктурная стратегия для высокотехнологичного роста'
   }
 };

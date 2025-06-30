@@ -9,19 +9,26 @@ import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js'
 export const GAZP_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
   figi: INSTRUMENTS.GAZP.figi,
-  orderLots: 2,
+  orderLots: 2, 
   signals: {
-    profit: { takeProfit: 15, stopLoss: 7 }, // Газпром волатильнее
-    ema: { fastLength: 12, slowLength: 26 },
-    stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 },
-    psar: { step: 0.02, maxStep: 0.2 },
-    rsi: { period: 14, highLevel: 75, lowLevel: 25 }
+    profit: { takeProfit: 4, stopLoss: 4 }, 
+    sma: { fastLength: 10, slowLength: 25 }, 
+    ema: { fastLength: 12, slowLength: 26 }, 
+    rsi: { period: 14, highLevel: 70, lowLevel: 30 }, 
+    stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 75, oversoldLevel: 25 }, 
+    psar: { step: 0.02, maxStep: 0.15 }, 
+    macd: { fastLength: 12, slowLength: 26, signalLength: 9 }, 
+    bollinger: { length: 20, stdDev: 2.0 }, 
+    adx: { period: 14, trendStrengthLevel: 25, strongTrendLevel: 40 },
+    move: { length: 21, threshold: 0, filterLevel: 0.4 }
   },
   triggers: {
-    // Покупка: восходящий тренд (EMA, PSAR) + перепроданность (Stochastic, RSI)
-    buySignal: '(ema || psar) && (stochastic || rsi)',
-    // Продажа: риск-менеджмент или нисходящий тренд с перекупленностью
-    sellSignal: 'profit || ((!ema || !psar) && (stochastic || rsi))',
-    description: 'Газпром: трендовая стратегия с использованием EMA и PSAR, подтверждение осцилляторами'
+    // Покупка: ОЧЕНЬ строгие условия из-за фундаментальных проблем
+    buySignal: '(sma && ema) && psar && macd && adx && (rsi || stochastic) && (bollinger || move)',
+    
+    // Продажа: агрессивная защита от структурных рисков
+    sellSignal: 'profit || (!psar || (!sma && !ema) || (!macd && !adx) || (rsi && stochastic))',
+    
+    description: 'Газпром: крайне осторожная стратегия для компании в структурном кризисе, ожидание пробоя 132₽ с объемом'
   }
 };

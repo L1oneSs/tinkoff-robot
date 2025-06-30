@@ -9,20 +9,26 @@ import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js'
 export const RUAL_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
   figi: INSTRUMENTS.RUAL.figi,
-  orderLots: 2,
+  orderLots: 3, 
   signals: {
-    profit: { takeProfit: 20, stopLoss: 10 }, // Металлургия очень волатильна
-    sma: { fastLength: 5, slowLength: 15 }, // Быстрые сигналы
-    rsi: { period: 10, highLevel: 80, lowLevel: 20 },
-    supertrend: { period: 10, multiplier: 3.0 },
-    roc: { period: 12, upperThreshold: 10, lowerThreshold: -10 },
-    cci: { period: 14, upperLevel: 150, lowerLevel: -150 }
+    profit: { takeProfit: 4, stopLoss: 4 }, 
+    sma: { fastLength: 8, slowLength: 21 }, 
+    ema: { fastLength: 12, slowLength: 26 }, 
+    rsi: { period: 14, highLevel: 75, lowLevel: 25 }, 
+    supertrend: { period: 12, multiplier: 2.5 }, 
+    macd: { fastLength: 12, slowLength: 26, signalLength: 9 }, 
+    roc: { period: 14, upperThreshold: 8, lowerThreshold: -8 }, 
+    cci: { period: 20, upperLevel: 120, lowerLevel: -120 }, 
+    bollinger: { length: 20, stdDev: 2.2 },
+    williams: { period: 14, overboughtLevel: -15, oversoldLevel: -85 }
   },
   triggers: {
-    // Покупка: сильный импульс + суперртренд + экстремальная перепроданность
-    buySignal: 'supertrend && (sma || roc) && (rsi || cci)',
-    // Продажа: тейк-профит/стоп-лосс или сильная перекупленность с разворотом тренда
-    sellSignal: 'profit || (!supertrend && (rsi || cci || roc))',
-    description: 'РУСАЛ: высокорисковая стратегия для волатильной металлургии с суперртрендом'
+    // Покупка: ждем сильного подтверждения разворота от множественных индикаторов
+    buySignal: 'supertrend && (sma || ema) && macd && (rsi || williams || cci) && (roc || bollinger)',
+    
+    // Продажа: быстрая фиксация прибыли + защита от санкционных/операционных рисков
+    sellSignal: 'profit || (!supertrend || (!sma && !ema) || (!macd && (rsi && cci)))',
+    
+    description: 'РУСАЛ: сбалансированная стратегия для санкционной бумаги с учетом геополитических рисков и потенциала разворота'
   }
 };

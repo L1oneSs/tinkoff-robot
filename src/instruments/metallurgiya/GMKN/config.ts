@@ -11,18 +11,23 @@ export const GMKN_CONFIG: BaseInstrumentConfig = {
   figi: INSTRUMENTS.GMKN.figi,
   orderLots: 1,
   signals: {
-    profit: { takeProfit: 25, stopLoss: 12 }, // Норникель сверхволатилен
-    sma: { fastLength: 7, slowLength: 21 },
-    rsi: { period: 14, highLevel: 75, lowLevel: 25 },
-    adx: { period: 14, trendStrengthLevel: 30, strongTrendLevel: 50 },
-    bollinger: { length: 20, stdDev: 2.5 }, // Расширенные полосы
-    williams: { period: 14, overboughtLevel: -15, oversoldLevel: -85 }
+    profit: { takeProfit: 4, stopLoss: 4 }, 
+    sma: { fastLength: 9, slowLength: 21 }, 
+    ema: { fastLength: 12, slowLength: 26 }, 
+    rsi: { period: 14, highLevel: 70, lowLevel: 30 }, 
+    adx: { period: 14, trendStrengthLevel: 25, strongTrendLevel: 40 }, 
+    bollinger: { length: 20, stdDev: 2.2 }, 
+    macd: { fastLength: 12, slowLength: 26, signalLength: 9 }, 
+    williams: { period: 14, overboughtLevel: -20, oversoldLevel: -80 }, 
+    stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 }
   },
   triggers: {
-    // Покупка: очень сильный тренд + множественное подтверждение от осцилляторов
-    buySignal: 'adx && sma && (rsi || williams) && bollinger',
-    // Продажа: тейк-профит/стоп-лосс или ослабление тренда с негативными сигналами
-    sellSignal: 'profit || (!adx && (!sma || (rsi || williams || bollinger)))',
-    description: 'Норникель: экстремально осторожная стратегия для сверхволатильной бумаги'
+    // Покупка: множественное подтверждение тренда + сырьевой momentum + техническое подтверждение
+    buySignal: '(sma || ema) && adx && macd && (rsi || williams || stochastic) && bollinger',
+    
+    // Продажа: быстрая фиксация прибыли + защита от волатильности
+    sellSignal: 'profit || ((!sma && !ema) || (!adx && !macd) || (rsi && williams && stochastic))',
+    
+    description: 'Норникель: сбалансированная стратегия для сырьевого цикла с учетом корпоративных рисков и отсутствия дивидендов'
   }
 };

@@ -10,21 +10,20 @@ import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js'
 export const MGNT_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
   figi: INSTRUMENTS.MGNT.figi,
-  enabled: false, // Временно отключен - FIGI не найден в API
-  orderLots: 1,
+  orderLots: 3,
   interval: CandleInterval.CANDLE_INTERVAL_5_MIN,
   signals: {
-    profit: { takeProfit: 10, stopLoss: 5 },
+    profit: { takeProfit: 3, stopLoss: 4 },
+    sma: { fastLength: 10, slowLength: 25 },
     ema: { fastLength: 12, slowLength: 26 },
-    rsi: { period: 14, highLevel: 70, lowLevel: 30 },
-    stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 },
-    macd: { fastLength: 12, slowLength: 26, signalLength: 9 }
+    rsi: { period: 14, highLevel: 75, lowLevel: 25 },
+    stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 85, oversoldLevel: 15 },
+    macd: { fastLength: 12, slowLength: 26, signalLength: 9 },
+    bollinger: { length: 20, stdDev: 2.2 }
   },
   triggers: {
-    // Покупка: подтверждение тренда + любой осциллятор в перепроданности
-    buySignal: '(ema || macd) && (rsi || stochastic)',
-    // Продажа: управление рисками или разворот тренда с перекупленностью
-    sellSignal: 'profit || ((!ema || !macd) && (rsi || stochastic))',
-    description: 'Магнит: сбалансированная ритейловая стратегия с EMA и классическими осцилляторами'
+    buySignal: '(sma || ema) && (rsi || stochastic) && macd',
+    sellSignal: 'profit || ((!sma && !ema) || (bollinger && (!rsi && !stochastic)))',
+    description: 'Магнит: ритейловая стратегия восстановления с фильтрацией ложных сигналов'
   }
 };

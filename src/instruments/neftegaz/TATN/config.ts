@@ -9,19 +9,25 @@ import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js'
 export const TATN_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
   figi: INSTRUMENTS.TATN.figi,
-  orderLots: 1,
+  orderLots: 2, 
   signals: {
-    profit: { takeProfit: 12, stopLoss: 6 },
-    sma: { fastLength: 8, slowLength: 21 },
-    rsi: { period: 14, highLevel: 70, lowLevel: 30 },
-    cci: { period: 20, upperLevel: 100, lowerLevel: -100 },
-    bollinger: { length: 14, stdDev: 2 }
+    profit: { takeProfit: 4, stopLoss: 4 },
+    sma: { fastLength: 9, slowLength: 21 },
+    ema: { fastLength: 8, slowLength: 18 },
+    rsi: { period: 12, highLevel: 72, lowLevel: 28 },
+    macd: { fastLength: 10, slowLength: 24, signalLength: 9 },
+    bollinger: { length: 16, stdDev: 2.1 },
+    williams: { period: 12, overboughtLevel: -20, oversoldLevel: -80 },
+    adx: { period: 14, trendStrengthLevel: 22, strongTrendLevel: 30 },
+    cci: { period: 18, upperLevel: 110, lowerLevel: -110 }
   },
   triggers: {
-    // Покупка: быстрая MA + перепроданность по CCI или RSI
-    buySignal: 'sma && (cci || rsi)',
-    // Продажа: управление рисками или перекупленность с разворотом тренда
-    sellSignal: 'profit || ((cci || rsi) && !sma)',
-    description: 'Татнефть: агрессивная стратегия с быстрыми сигналами и осцилляторами'
+    // Покупка: тренд + множественное подтверждение осцилляторов
+    buySignal: '(sma || ema) && rsi && (williams || cci) && adx',
+    
+    // Продажа: защита прибыли или сильный разворотный сигнал
+    sellSignal: 'profit || (!sma && !ema && (!rsi || !williams) && macd)',
+    
+    description: 'Татнефть: сбалансированная стратегия с учетом дивидендной политики и операционной эффективности ТАНЭКО'
   }
 };

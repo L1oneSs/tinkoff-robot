@@ -6,12 +6,16 @@
 import { CandleInterval } from 'tinkoff-invest-api/dist/generated/marketdata.js';
 import { BaseInstrumentConfig } from './instruments/base-config.js';
 import { 
-  ROSN_CONFIG, TATN_CONFIG, GAZP_CONFIG, LKOH_CONFIG,
-  SBER_CONFIG, VTBR_CONFIG,
-  RUAL_CONFIG, NLMK_CONFIG, GMKN_CONFIG,
-  MGNT_CONFIG,
+  ROSN_CONFIG, TATN_CONFIG, GAZP_CONFIG, LKOH_CONFIG, NVTK_CONFIG,
+  SBER_CONFIG, VTBR_CONFIG, SVCB_CONFIG,
+  RUAL_CONFIG, NLMK_CONFIG, GMKN_CONFIG, CHMF_CONFIG, MAGN_CONFIG, ALRS_CONFIG, PLZL_CONFIG,
+  MGNT_CONFIG, OZON_CONFIG, FIXP_CONFIG,
   MTSS_CONFIG,
-  YNDX_CONFIG
+  YNDX_CONFIG, WUSH_CONFIG, VKCO_CONFIG,
+  HYDR_CONFIG, IRAO_CONFIG,
+  PHOR_CONFIG,
+  PIKK_CONFIG,
+  AFLT_CONFIG
 } from './instruments/index.js';
 
 // Экспорт всех типов из новой структуры
@@ -34,24 +38,47 @@ const ALL_INSTRUMENT_CONFIGS: BaseInstrumentConfig[] = [
   TATN_CONFIG,
   GAZP_CONFIG,
   LKOH_CONFIG,
+  NVTK_CONFIG,
   
   // Банки
   SBER_CONFIG,
   VTBR_CONFIG,
+  SVCB_CONFIG,
   
-  // Металлургия
+  // Металлургия и горнодобыча
   RUAL_CONFIG,
   NLMK_CONFIG,
   GMKN_CONFIG,
+  CHMF_CONFIG,
+  MAGN_CONFIG,
+  ALRS_CONFIG,
+  PLZL_CONFIG,
   
   // Ритейл
   MGNT_CONFIG,
+  OZON_CONFIG,
+  FIXP_CONFIG,
   
   // Телекоммуникации
   MTSS_CONFIG,
   
   // Технологии
-  YNDX_CONFIG
+  YNDX_CONFIG,
+  WUSH_CONFIG,
+  VKCO_CONFIG,
+  
+  // Энергетика
+  HYDR_CONFIG,
+  IRAO_CONFIG,
+  
+  // Удобрения
+  PHOR_CONFIG,
+  
+  // Недвижимость
+  PIKK_CONFIG,
+  
+  // Авиакосмическая промышленность
+  AFLT_CONFIG
 ];
 
 /**
