@@ -10,7 +10,6 @@ import { Orders } from './account/orders.js';
 import { Portfolio } from './account/portfolio.js';
 import { TelegramNotifier } from './notifications/telegram.js';
 import { TradeTracker } from './trade-tracker/index.js';
-import { ReportGenerator } from './reports/generator.js';
 import { ReportScheduler } from './scheduler/index.js';
 
 const { REAL_ACCOUNT_ID = '', SANDBOX_ACCOUNT_ID = '' } = process.env;
@@ -30,13 +29,11 @@ export interface RobotConfig {
   logLevel?: string,
   /** Используемые стратегии */
   strategies: StrategyConfig[],
-  /** Включить уведомления и отчеты */
+  /** Включить уведомления */
   enableNotifications?: boolean;
-  /** Включить автоматические отчеты */
-  enableReports?: boolean;
 }
 
-const defaults: Pick<RobotConfig, 'dryRun' | 'cacheDir' | 'logLevel' | 'enableNotifications' | 'enableReports'> = {
+const defaults: Pick<RobotConfig, 'dryRun' | 'cacheDir' | 'logLevel' | 'enableNotifications'> = {
   dryRun: false,
   cacheDir: (() => {
     // В serverless окружении используем /tmp для кэша
@@ -51,7 +48,6 @@ const defaults: Pick<RobotConfig, 'dryRun' | 'cacheDir' | 'logLevel' | 'enableNo
   })(),
   logLevel: 'info',
   enableNotifications: true,
-  enableReports: true,
 };
 
 export class Robot {
@@ -62,10 +58,9 @@ export class Robot {
   portfolio: Portfolio;
   strategies: Strategy[];
   
-  // Новые модули для уведомлений и отчетов
+  // Модули для уведомлений
   telegramNotifier!: TelegramNotifier;
   tradeTracker!: TradeTracker;
-  reportGenerator!: ReportGenerator;
   reportScheduler!: ReportScheduler;
 
   logger: Logger;
@@ -121,24 +116,17 @@ export class Robot {
   }
 
   /**
-   * Инициализация модулей уведомлений и отчетов
+   * Инициализация модулей уведомлений
    */
   private initializeModules() {
     this.telegramNotifier = new TelegramNotifier();
     this.tradeTracker = new TradeTracker();
-    this.reportGenerator = new ReportGenerator();
-    this.reportScheduler = new ReportScheduler(
-      this.tradeTracker,
-      this.reportGenerator,
-      this.telegramNotifier
-    );
+    this.reportScheduler = new ReportScheduler(); // Только для проверки торгового времени
     
     if (this.config.enableNotifications) {
       this.logger.info('Уведомления включены');
     }
-    if (this.config.enableReports) {
-      this.logger.info('Автоматические отчеты включены');
-    }
+    this.logger.info('Отчеты отключены - только уведомления о сделках');
   }
 
   /**
@@ -148,10 +136,7 @@ export class Robot {
   async runOnce() {
     this.logger.log(`Вызов робота (${this.config.useRealAccount ? 'боевой счет' : 'песочница'})`);
     
-    // Проверяем и отправляем отчеты (если включены)
-    if (this.config.enableReports) {
-      await this.reportScheduler.checkAndSendReports();
-    }
+    // Больше никаких отчетов не проверяем
     
     await this.portfolio.load();
     await this.orders.load();
@@ -193,14 +178,46 @@ export class Robot {
       // Записываем сделку
       const trade = this.tradeTracker.recordTrade(tradeData);
       
-      // Отправляем уведомление в Telegram
-      const notification = this.reportGenerator.formatTradeNotification(trade);
+      // Отправляем простое уведомление в Telegram
+      const notification = this.formatTradeNotification(trade);
       await this.telegramNotifier.sendMessage(notification);
       
       this.logger.info(`Записана и отправлена информация о сделке: ${trade.action} ${trade.instrumentName}`);
     } catch (error) {
       this.logger.error('Ошибка при записи сделки:', error);
     }
+  }
+
+  /**
+   * Простое форматирование уведомления о сделке
+   */
+  private formatTradeNotification(trade: any): string {
+    const actionEmoji = trade.action === 'buy' ? '🟢' : '🔴';
+    const actionText = trade.action === 'buy' ? 'ПОКУПКА' : 'ПРОДАЖА';
+    
+    let message = `${actionEmoji} *${actionText}*\n\n`;
+    message += `📄 *Инструмент:* ${trade.instrumentName}\n`;
+    message += `📊 *Количество:* ${trade.quantity}\n`;
+    message += `💰 *Цена:* ${trade.price.toFixed(2)} руб.\n`;
+    message += `💵 *Сумма:* ${trade.totalAmount.toFixed(2)} руб.\n`;
+    message += `💸 *Комиссия:* ${trade.commission.toFixed(2)} руб.\n`;
+    
+    if (trade.action === 'sell' && trade.profit !== undefined) {
+      const profitEmoji = trade.profit >= 0 ? '📈' : '📉';
+      message += `${profitEmoji} *Прибыль:* ${trade.profit.toFixed(2)} руб. (${trade.profitPercent?.toFixed(2)}%)\n`;
+    }
+    
+    if (trade.signals.length > 0) {
+      message += `🎯 *Сигналы:* ${trade.signals.join(', ')}\n`;
+    }
+    
+    if (trade.triggerExpression) {
+      message += `⚡ *Триггер:* \`${trade.triggerExpression}\`\n`;
+    }
+    
+    message += `⏰ *Время:* ${trade.timestamp.toLocaleString('ru-RU')}\n`;
+    
+    return message;
   }
 
   /**
