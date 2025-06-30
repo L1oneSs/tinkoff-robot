@@ -112,7 +112,9 @@ export class TradeTracker {
       // В Yandex Cloud используем память
       this.tradesMemory.push(tradeRecord);
       this.saveTradestoEnv(); // Сохраняем в переменную окружения
-      this.logger.info(`[YANDEX] Сделка записана в память: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`);
+      this.logger.info(
+        `[YANDEX] Сделка записана в память: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`
+      );
       
       // Также логируем в формате, который можно будет парсить
       this.logger.info(`[TRADE_DATA]: ${JSON.stringify(tradeRecord)}`);
@@ -199,7 +201,9 @@ export class TradeTracker {
         this.logger.info(`[YANDEX] Сделки: ${JSON.stringify(trades, null, 2)}`);
       } else {
         // В Yandex Cloud возвращаем заглушку с информацией о логах
-        this.logger.info('[YANDEX] Сделки не найдены в памяти. Проверьте логи Yandex Cloud для получения истории сделок.');
+        this.logger.info(
+          '[YANDEX] Сделки не найдены в памяти. Проверьте логи Yandex Cloud для получения истории сделок.'
+        );
         return {
           date,
           totalTrades: 0,

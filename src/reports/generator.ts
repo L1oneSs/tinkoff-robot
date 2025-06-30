@@ -58,12 +58,31 @@ export class ReportGenerator {
     
     // В serverless окружении добавляем информацию о логах
     if (this.isServerlessEnvironment() && stats.totalTrades === 0) {
-      report += `📋 *Информация:* В Yandex Cloud Functions статистика может быть неполной.\n`;
-      report += `🔍 Для получения полной истории сделок проверьте логи функции.\n\n`;
+      report += this.getServerlessWarning();
     }
     
     // Основные метрики
-    report += `💰 *Прибыль:* ${stats.totalProfit.toFixed(2)} руб. ${profitEmoji}\n`;
+    report += this.formatMainMetrics(stats, profitEmoji, winRate);
+    
+    // Дополнительная информация
+    report += this.formatAdditionalInfo(stats);
+    
+    return report;
+  }
+
+  /**
+   * Получить предупреждение для serverless окружения
+   */
+  private getServerlessWarning(): string {
+    return `📋 *Информация:* В Yandex Cloud Functions статистика может быть неполной.\n` +
+           `🔍 Для получения полной истории сделок проверьте логи функции.\n\n`;
+  }
+
+  /**
+   * Форматировать основные метрики
+   */
+  private formatMainMetrics(stats: DailyStats, profitEmoji: string, winRate: string): string {
+    let report = `💰 *Прибыль:* ${stats.totalProfit.toFixed(2)} руб. ${profitEmoji}\n`;
     report += `📊 *Доходность:* ${stats.totalProfitPercent.toFixed(2)}%\n`;
     report += `🔄 *Всего сделок:* ${stats.totalTrades}\n`;
     report += `📥 *Покупок:* ${stats.buyTrades}\n`;
@@ -76,6 +95,15 @@ export class ReportGenerator {
     if (stats.sellTrades > 0) {
       report += `📊 *Средняя прибыль:* ${stats.averageProfit.toFixed(2)} руб.\n\n`;
     }
+    
+    return report;
+  }
+
+  /**
+   * Форматировать дополнительную информацию
+   */
+  private formatAdditionalInfo(stats: DailyStats): string {
+    let report = '';
     
     // Лучшая и худшая сделки
     if (stats.bestTrade) {
