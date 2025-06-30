@@ -15,12 +15,18 @@ const api = new TinkoffInvestApi({
 
 const configOverwrite: Partial<RobotConfig> = {
   useRealAccount: true,
-  dryRun: true,
+  dryRun: false, 
 };
 
 export const handler: Handler<TimerMessage> = async event => {
   try {
     const finalConfig = { ...config, ...configOverwrite };
+    console.log('[Handler]: Конфигурация робота:', {
+      useRealAccount: finalConfig.useRealAccount,
+      dryRun: finalConfig.dryRun,
+      strategiesCount: finalConfig.strategies.length
+    });
+    
     const robot = new Robot(api, finalConfig);
     await robot.runOnce();
   } catch (e) {
