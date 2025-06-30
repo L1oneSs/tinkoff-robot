@@ -57,11 +57,11 @@ export class SimpleReportSender {
         return;
       }
 
-      // Проверяем время отправки отчётов (19:00 МСК ± 5 минут)
-      const isReportTime = (currentHour === 19 && currentMinute >= 0 && currentMinute <= 10);
+      // Проверяем время отправки отчётов (18:55-19:05 МСК)
+      const isReportTime = (currentHour === 18 && currentMinute >= 55) || (currentHour === 19 && currentMinute <= 5);
       
       if (!isReportTime) {
-        this.logger.info(`Не время для отчётов (${currentHour}:${currentMinute}). Отчёты отправляются в 19:00-19:10 МСК`);
+        this.logger.info(`Не время для отчётов (${currentHour}:${currentMinute}). Отчёты отправляются в 18:55-19:05 МСК`);
         return;
       }
 
