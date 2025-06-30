@@ -193,7 +193,8 @@ export class ReportGenerator {
         <rect width="100%" height="100%" fill="white"/>
         
         <!-- Заголовок -->
-        <text x="${width / 2}" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#333">
+        <text x="${width / 2}" y="30" text-anchor="middle" font-family="Arial" font-size="16" 
+              font-weight="bold" fill="#333">
           Прибыль за неделю (${stats.weekStart} — ${stats.weekEnd})
         </text>
         
@@ -204,14 +205,16 @@ export class ReportGenerator {
         `).join('')}
         
         <!-- Оси -->
-        <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + chartHeight}" 
-              stroke="#333" stroke-width="2"/>
-        <line x1="${margin.left}" y1="${margin.top + chartHeight}" x2="${margin.left + chartWidth}" y2="${margin.top + chartHeight}" 
+        <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" 
+              y2="${margin.top + chartHeight}" stroke="#333" stroke-width="2"/>
+        <line x1="${margin.left}" y1="${margin.top + chartHeight}" 
+              x2="${margin.left + chartWidth}" y2="${margin.top + chartHeight}" 
               stroke="#333" stroke-width="2"/>
         
         <!-- Подписи Y -->
         ${yAxisLabels.map(tick => `
-          <text x="${margin.left - 10}" y="${tick.y + 5}" text-anchor="end" font-family="Arial" font-size="12" fill="#333">
+          <text x="${margin.left - 10}" y="${tick.y + 5}" text-anchor="end" 
+                font-family="Arial" font-size="12" fill="#333">
             ${tick.value}
           </text>
         `).join('')}
@@ -219,7 +222,8 @@ export class ReportGenerator {
         <!-- Подписи X -->
         ${labels.map((label, i) => {
           const x = margin.left + (i / (labels.length - 1)) * chartWidth;
-          return `<text x="${x}" y="${margin.top + chartHeight + 20}" text-anchor="middle" font-family="Arial" font-size="12" fill="#333">
+          return `<text x="${x}" y="${margin.top + chartHeight + 20}" text-anchor="middle" 
+                        font-family="Arial" font-size="12" fill="#333">
             ${label}
           </text>`;
         }).join('')}
@@ -350,7 +354,8 @@ export class ReportGenerator {
         <rect width="100%" height="100%" fill="white"/>
         
         <!-- Заголовок -->
-        <text x="${centerX}" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#333">
+        <text x="${centerX}" y="30" text-anchor="middle" font-family="Arial" 
+              font-size="16" font-weight="bold" fill="#333">
           ${title}
         </text>
         
@@ -373,7 +378,8 @@ export class ReportGenerator {
     return `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="white"/>
-        <text x="${width / 2}" y="${height / 2}" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#333">
+        <text x="${width / 2}" y="${height / 2}" text-anchor="middle" 
+              font-family="Arial" font-size="16" font-weight="bold" fill="#333">
           Нет данных о сигналах
         </text>
       </svg>
