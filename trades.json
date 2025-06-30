@@ -1,0 +1,36 @@
+[
+  {
+    "figi": "TCS00A105EX7",
+    "instrumentName": "Whoosh",
+    "action": "sell",
+    "quantity": 68,
+    "price": 164.02,
+    "totalAmount": 11153.36,
+    "commission": 33.460080000000005,
+    "profit": -2051.4031760260455,
+    "profitPercent": -18.392692211369894,
+    "signals": [
+      "profit"
+    ],
+    "id": "trade_1751280638004_xva70j4wv",
+    "timestamp": "2025-06-30T10:50:38.004Z",
+    "sessionDate": "2025-06-30"
+  },
+  {
+    "figi": "TCS00A105EX7",
+    "instrumentName": "Whoosh",
+    "action": "sell",
+    "quantity": 68,
+    "price": 164.22,
+    "totalAmount": 11166.96,
+    "commission": 33.500879999999995,
+    "profit": -2042.7516053373404,
+    "profitPercent": -18.292817430503383,
+    "signals": [
+      "profit"
+    ],
+    "id": "trade_1751281150716_kjhzsprnu",
+    "timestamp": "2025-06-30T10:59:10.716Z",
+    "sessionDate": "2025-06-30"
+  }
+]

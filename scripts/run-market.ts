@@ -25,7 +25,22 @@ const cliFlags = {
 };
 const delay = intervalToMs(config.strategies[0].interval);
 
-main();
+// Обработчик необработанных ошибок
+process.on('uncaughtException', (error) => {
+  console.error('Необработанная ошибка:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Необработанное отклонение промиса:', reason);
+  console.error('Промис:', promise);
+  process.exit(1);
+});
+
+main().catch(error => {
+  console.error('Ошибка в main():', error);
+  process.exit(1);
+});
 
 async function main() {
   const finalConfig = { 

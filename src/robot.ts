@@ -4,6 +4,7 @@
  */
 import { CandlesLoader, RealAccount, SandboxAccount, TinkoffAccount, TinkoffInvestApi } from 'tinkoff-invest-api';
 import { Logger, LogLevel } from '@vitalets/logger';
+import { existsSync, mkdirSync } from 'fs';
 import { Strategy, StrategyConfig } from './strategy.js';
 import { Orders } from './account/orders.js';
 import { Portfolio } from './account/portfolio.js';
@@ -37,7 +38,17 @@ export interface RobotConfig {
 
 const defaults: Pick<RobotConfig, 'dryRun' | 'cacheDir' | 'logLevel' | 'enableNotifications' | 'enableReports'> = {
   dryRun: false,
-  cacheDir: '.cache',
+  cacheDir: (() => {
+    // В serverless окружении используем /tmp для кэша
+    const isServerless = !!(
+      process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      process.env._HANDLER ||
+      process.env.LAMBDA_TASK_ROOT ||
+      process.env.YANDEX_CLOUD_FUNCTION_NAME ||
+      process.env.YANDEX_CLOUD_FUNCTION_VERSION
+    );
+    return isServerless ? '/tmp/.cache' : '.cache';
+  })(),
   logLevel: 'info',
   enableNotifications: true,
   enableReports: true,
@@ -52,10 +63,10 @@ export class Robot {
   strategies: Strategy[];
   
   // Новые модули для уведомлений и отчетов
-  telegramNotifier: TelegramNotifier;
-  tradeTracker: TradeTracker;
-  reportGenerator: ReportGenerator;
-  reportScheduler: ReportScheduler;
+  telegramNotifier!: TelegramNotifier;
+  tradeTracker!: TradeTracker;
+  reportGenerator!: ReportGenerator;
+  reportScheduler!: ReportScheduler;
 
   logger: Logger;
 
@@ -67,6 +78,9 @@ export class Robot {
     this.account = config.useRealAccount
       ? new RealAccount(api, cleanRealAccountId)
       : new SandboxAccount(api, cleanSandboxAccountId);
+    
+    // Инициализируем кэш
+    this.initializeCache();
       
     this.candlesLoader = new CandlesLoader(api, { cacheDir: this.config.cacheDir });
     this.orders = new Orders(this);
@@ -74,6 +88,42 @@ export class Robot {
     this.strategies = this.config.strategies.map(strategyConfig => new Strategy(this, strategyConfig));
     
     // Инициализируем модули уведомлений и отчетов
+    this.initializeModules();
+  }
+
+  /**
+   * Инициализация папки кэша
+   */
+  private initializeCache() {
+    if (this.config.cacheDir) {
+      try {
+        if (!existsSync(this.config.cacheDir)) {
+          mkdirSync(this.config.cacheDir, { recursive: true });
+          this.logger.info(`Создана папка кэша: ${this.config.cacheDir}`);
+        }
+      } catch (error) {
+        this.logger.warn(`Не удалось создать папку кэша ${this.config.cacheDir}:`, error);
+        // В случае ошибки, проверим доступность /tmp
+        try {
+          const tmpCacheDir = '/tmp/.cache';
+          if (!existsSync(tmpCacheDir)) {
+            mkdirSync(tmpCacheDir, { recursive: true });
+            this.logger.info(`Создана резервная папка кэша: ${tmpCacheDir}`);
+          }
+          this.config.cacheDir = tmpCacheDir;
+        } catch (tmpError) {
+          this.logger.error('Не удалось создать резервную папку кэша:', tmpError);
+          // Отключаем кэширование если не можем создать папку
+          this.config.cacheDir = undefined;
+        }
+      }
+    }
+  }
+
+  /**
+   * Инициализация модулей уведомлений и отчетов
+   */
+  private initializeModules() {
     this.telegramNotifier = new TelegramNotifier();
     this.tradeTracker = new TradeTracker();
     this.reportGenerator = new ReportGenerator();

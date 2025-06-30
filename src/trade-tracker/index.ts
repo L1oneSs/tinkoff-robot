@@ -59,7 +59,23 @@ export class TradeTracker {
 
   constructor() {
     this.logger = new Logger({ prefix: '[TradeTracker]:', level: 'info' });
-    this.tradesFilePath = join(process.cwd(), 'trades.json');
+    // В serverless окружении используем /tmp для записи файлов
+    const isServerless = this.isServerlessEnvironment();
+    const baseDir = isServerless ? '/tmp' : process.cwd();
+    this.tradesFilePath = join(baseDir, 'trades.json');
+  }
+
+  /**
+   * Определяет, запущен ли код в serverless окружении
+   */
+  private isServerlessEnvironment(): boolean {
+    return !!(
+      process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      process.env._HANDLER ||
+      process.env.LAMBDA_TASK_ROOT ||
+      process.env.YANDEX_CLOUD_FUNCTION_NAME ||
+      process.env.YANDEX_CLOUD_FUNCTION_VERSION
+    );
   }
 
   /**
@@ -92,6 +108,10 @@ export class TradeTracker {
 
     try {
       const data = readFileSync(this.tradesFilePath, 'utf8');
+      if (!data.trim()) {
+        // Файл пустой
+        return [];
+      }
       const trades = JSON.parse(data);
       // Преобразуем строки дат обратно в Date объекты
       return trades.map((trade: TradeRecord) => ({
@@ -112,6 +132,20 @@ export class TradeTracker {
       writeFileSync(this.tradesFilePath, JSON.stringify(trades, null, 2), 'utf8');
     } catch (error) {
       this.logger.error('Ошибка при сохранении сделок:', error);
+      
+      // В serverless окружении попробуем перенаправить в /tmp
+      if (this.isServerlessEnvironment() && !this.tradesFilePath.startsWith('/tmp')) {
+        try {
+          const tmpPath = join('/tmp', 'trades.json');
+          writeFileSync(tmpPath, JSON.stringify(trades, null, 2), 'utf8');
+          this.logger.warn(`Сделки сохранены в резервном месте: ${tmpPath}`);
+          this.tradesFilePath = tmpPath;
+        } catch (tmpError) {
+          this.logger.error('Ошибка при сохранении в резервном месте:', tmpError);
+          // В крайнем случае - просто логируем данные
+          this.logger.info('Сделки для логирования:', JSON.stringify(trades, null, 2));
+        }
+      }
     }
   }
 
@@ -235,6 +269,17 @@ export class TradeTracker {
       this.logger.info('Файл сделок очищен');
     } catch (error) {
       this.logger.error('Ошибка при очистке файла сделок:', error);
+      // В serverless случае попробуем очистить в /tmp
+      if (this.isServerlessEnvironment() && !this.tradesFilePath.startsWith('/tmp')) {
+        try {
+          const tmpPath = join('/tmp', 'trades.json');
+          writeFileSync(tmpPath, '[]', 'utf8');
+          this.logger.warn(`Сделки очищены в резервном месте: ${tmpPath}`);
+          this.tradesFilePath = tmpPath;
+        } catch (tmpError) {
+          this.logger.error('Ошибка при очистке резервного файла:', tmpError);
+        }
+      }
     }
   }
 
