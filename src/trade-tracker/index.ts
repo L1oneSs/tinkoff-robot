@@ -45,7 +45,8 @@ export class TradeTracker {
 
     try {
       await this.saveTradeToGoogleSheets(tradeRecord);
-      this.logger.info(`Сделка записана в Google Sheets: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`);
+      this.logger.info(`Сделка записана в Google Sheets: ${trade.action} ${trade.quantity}
+         ${trade.instrumentName} по ${trade.price}`);
     } catch (error) {
       this.logger.error('Ошибка записи сделки в Google Sheets:', error);
       // Не бросаем ошибку, чтобы не прерывать торговлю
