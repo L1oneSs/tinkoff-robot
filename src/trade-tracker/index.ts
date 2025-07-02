@@ -1,9 +1,9 @@
 /**
- * Модуль для отслеживания и записи торговых сделок
+ * Модуль для отслеживания и записи торговых сделок в Google Sheets
  */
 
-import { writeFileSync, readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 import { Logger } from '@vitalets/logger';
 
 export interface TradeRecord {
@@ -25,43 +25,16 @@ export interface TradeRecord {
 
 export class TradeTracker {
   private logger: Logger;
-  private tradesFilePath: string;
-  private tradesMemory: TradeRecord[] = []; // In-memory хранение для serverless
 
   constructor() {
     this.logger = new Logger({ prefix: '[TradeTracker]:', level: 'info' });
-    if (this.isYandexCloud()) {
-      this.logger.info('Yandex Cloud обнаружен: используем in-memory хранение сделок');
-      this.tradesFilePath = '';
-    } else {
-      const isServerless = this.isServerlessEnvironment();
-      const baseDir = isServerless ? '/tmp' : process.cwd();
-      this.tradesFilePath = join(baseDir, 'trades.json');
-    }
-  }
-
-  private isYandexCloud(): boolean {
-    return !!(
-      process.env.YANDEX_CLOUD_FUNCTION_NAME ||
-      process.env.YANDEX_CLOUD_FUNCTION_VERSION ||
-      process.env._YANDEX_CLOUD_
-    );
-  }
-
-  private isServerlessEnvironment(): boolean {
-    return !!(
-      process.env.AWS_LAMBDA_FUNCTION_NAME ||
-      process.env._HANDLER ||
-      process.env.LAMBDA_TASK_ROOT ||
-      process.env.YANDEX_CLOUD_FUNCTION_NAME ||
-      process.env.YANDEX_CLOUD_FUNCTION_VERSION
-    );
+    this.logger.info('TradeTracker инициализирован для работы с Google Sheets');
   }
 
   /**
-   * Записать новую сделку
+   * Записать новую сделку в Google Sheets
    */
-  recordTrade(trade: Omit<TradeRecord, 'id' | 'timestamp' | 'sessionDate'>): TradeRecord {
+  async recordTrade(trade: Omit<TradeRecord, 'id' | 'timestamp' | 'sessionDate'>): Promise<TradeRecord> {
     const now = new Date();
     const tradeRecord: TradeRecord = {
       ...trade,
@@ -70,82 +43,136 @@ export class TradeTracker {
       sessionDate: this.formatDate(now),
     };
 
-    if (this.isYandexCloud()) {
-      // В Yandex Cloud: только память + логи (без переменных окружения)
-      this.tradesMemory.push(tradeRecord);
-      this.logger.info(
-        `[YANDEX] Сделка записана: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`
-      );
-      this.logger.info(`[TRADE_DATA]: ${JSON.stringify(tradeRecord)}`);
-    } else {
-      // Обычная файловая запись
-      const trades = this.loadTrades();
-      trades.push(tradeRecord);
-      this.saveTrades(trades);
+    try {
+      await this.saveTradeToGoogleSheets(tradeRecord);
+      this.logger.info(`Сделка записана в Google Sheets: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`);
+    } catch (error) {
+      this.logger.error('Ошибка записи сделки в Google Sheets:', error);
+      // Не бросаем ошибку, чтобы не прерывать торговлю
     }
 
-    this.logger.info(`Записана сделка: ${trade.action} ${trade.quantity} ${trade.instrumentName} по ${trade.price}`);
     return tradeRecord;
   }
 
   /**
-   * Получить все сделки
+   * Получить все сделки из Google Sheets
    */
-  loadTrades(): TradeRecord[] {
-    // В Yandex Cloud используем только память
-    if (this.isYandexCloud()) {
-      return this.tradesMemory;
-    }
-
-    // В локальном окружении используем файлы
-    if (!existsSync(this.tradesFilePath)) {
-      return [];
-    }
-
+  async loadTrades(): Promise<TradeRecord[]> {
     try {
-      const data = readFileSync(this.tradesFilePath, 'utf8');
-      if (!data.trim()) {
-        return [];
-      }
-      const trades = JSON.parse(data);
-      return trades.map((trade: TradeRecord) => ({
-        ...trade,
-        timestamp: new Date(trade.timestamp),
-      }));
+      return await this.loadTradesFromGoogleSheets();
     } catch (error) {
-      this.logger.error('Ошибка при загрузке сделок:', error);
+      this.logger.error('Ошибка загрузки сделок из Google Sheets:', error);
       return [];
     }
   }
 
   /**
-   * Очистить сделки (только для локального окружения)
+   * Очистить сделки (не реализовано для Google Sheets)
    */
   clearTrades() {
-    if (this.isYandexCloud()) {
-      this.tradesMemory = [];
-      this.logger.info('Сделки очищены из памяти (Yandex Cloud)');
-      return;
-    }
-    try {
-      writeFileSync(this.tradesFilePath, '[]', 'utf8');
-      this.logger.info('Файл сделок очищен');
-    } catch (error) {
-      this.logger.error('Ошибка при очистке файла сделок:', error);
-    }
+    this.logger.warn('Очистка сделок не поддерживается для Google Sheets');
   }
 
-  private saveTrades(trades: TradeRecord[]) {
-    if (this.isYandexCloud()) {
-      // В Yandex Cloud не сохраняем в файлы
-      return;
+  /**
+   * Сохранить сделку в Google Sheets
+   */
+  private async saveTradeToGoogleSheets(trade: TradeRecord): Promise<void> {
+    const doc = await this.getGoogleSheetsDoc();
+    const worksheet = await this.getOrCreateWorksheet(doc);
+
+    // Добавляем строку с данными сделки
+    await worksheet.addRow({
+      'ID': trade.id,
+      'Дата': trade.sessionDate,
+      'Время': trade.timestamp.toLocaleTimeString('ru-RU'),
+      'FIGI': trade.figi,
+      'Инструмент': trade.instrumentName,
+      'Действие': trade.action === 'buy' ? 'Покупка' : 'Продажа',
+      'Количество': trade.quantity,
+      'Цена': trade.price,
+      'Сумма': trade.totalAmount,
+      'Комиссия': trade.commission,
+      'Прибыль': trade.profit || '',
+      'Прибыль %': trade.profitPercent || '',
+      'Сигналы': trade.signals.join(', '),
+      'Триггер': trade.triggerExpression || ''
+    });
+  }
+
+  /**
+   * Загрузить сделки из Google Sheets
+   */
+  private async loadTradesFromGoogleSheets(): Promise<TradeRecord[]> {
+    const doc = await this.getGoogleSheetsDoc();
+    const worksheet = await this.getOrCreateWorksheet(doc);
+
+    const rows = await worksheet.getRows();
+    
+    return rows.map(row => ({
+      id: row.get('ID'),
+      timestamp: new Date(`${row.get('Дата')} ${row.get('Время')}`),
+      figi: row.get('FIGI'),
+      instrumentName: row.get('Инструмент'),
+      action: row.get('Действие') === 'Покупка' ? 'buy' : 'sell',
+      quantity: parseFloat(row.get('Количество')) || 0,
+      price: parseFloat(row.get('Цена')) || 0,
+      totalAmount: parseFloat(row.get('Сумма')) || 0,
+      commission: parseFloat(row.get('Комиссия')) || 0,
+      profit: row.get('Прибыль') ? parseFloat(row.get('Прибыль')) : undefined,
+      profitPercent: row.get('Прибыль %') ? parseFloat(row.get('Прибыль %')) : undefined,
+      signals: row.get('Сигналы') ? row.get('Сигналы').split(', ') : [],
+      triggerExpression: row.get('Триггер') || undefined,
+      sessionDate: row.get('Дата')
+    }));
+  }
+
+  /**
+   * Получить Google Sheets документ
+   */
+  private async getGoogleSheetsDoc(): Promise<GoogleSpreadsheet> {
+    // Декодируем приватный ключ
+    let privateKey: string;
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64) {
+      privateKey = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64, 'base64').toString('utf-8');
+    } else {
+      privateKey = (process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '').replace(/\\n/g, '\n');
     }
 
-    try {
-      writeFileSync(this.tradesFilePath, JSON.stringify(trades, null, 2), 'utf8');
-    } catch (error) {
-      this.logger.error('Ошибка при сохранении сделок:', error);
+    // Создаем JWT клиент
+    const serviceAccountAuth = new JWT({
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL!,
+      key: privateKey,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SPREADSHEET_ID!, serviceAccountAuth);
+    await doc.loadInfo();
+
+    return doc;
+  }
+
+  /**
+   * Получить или создать рабочий лист
+   */
+  private async getOrCreateWorksheet(doc: GoogleSpreadsheet) {
+    const worksheetTitle = process.env.GOOGLE_WORKSHEET_TITLE || 'Trades';
+    
+    let worksheet = doc.sheetsByTitle[worksheetTitle];
+    
+    if (!worksheet) {
+      // Создаем новый лист с заголовками
+      worksheet = await doc.addSheet({
+        title: worksheetTitle,
+        headerValues: [
+          'ID', 'Дата', 'Время', 'FIGI', 'Инструмент', 'Действие', 
+          'Количество', 'Цена', 'Сумма', 'Комиссия', 'Прибыль', 
+          'Прибыль %', 'Сигналы', 'Триггер'
+        ]
+      });
+      this.logger.info(`Создан новый лист "${worksheetTitle}" в Google Sheets`);
     }
+
+    return worksheet;
   }
 
   private generateTradeId(): string {

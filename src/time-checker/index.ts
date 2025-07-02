@@ -1,22 +1,14 @@
 /**
- * Упрощенный модуль для проверки торгового времени
+ * Модуль для проверки торгового времени
  */
 
 import { Logger } from '@vitalets/logger';
 
-export class ReportScheduler {
+export class TradingTimeChecker {
   private logger: Logger;
 
   constructor() {
-    this.logger = new Logger({ prefix: '[ReportScheduler]:', level: 'info' });
-  }
-
-  /**
-   * Заглушка для совместимости - отчеты отключены
-   */
-  async checkAndSendReports(): Promise<void> {
-    // Больше никаких отчетов не отправляем
-    this.logger.debug('Отчеты отключены');
+    this.logger = new Logger({ prefix: '[TradingTime]:', level: 'info' });
   }
 
   /**
@@ -36,7 +28,7 @@ export class ReportScheduler {
   }
 
   /**
-   * Получить статус планировщика
+   * Получить статус торгового времени
    */
   getStatus(): string {
     const now = new Date();
@@ -44,10 +36,10 @@ export class ReportScheduler {
     const currentTime = this.formatTime(moscowTime);
     const isTrading = this.isTradingTime();
     
-    return `📅 *Статус робота*\n\n` +
+    return `📅 *Статус торгового времени*\n\n` +
            `🕐 *Московское время:* ${currentTime}\n` +
            `📈 *Торговое время:* ${isTrading ? 'Да' : 'Нет'}\n` +
-           `📊 *Отчеты:* Отключены (только уведомления о сделках)`;
+           `⏰ *Торговые часы:* 10:00-19:00 МСК (пн-пт)`;
   }
 
   /**
@@ -72,3 +64,6 @@ export class ReportScheduler {
     return date.toTimeString().slice(0, 5);
   }
 }
+
+// Экспортируем старое имя для обратной совместимости
+export const ReportScheduler = TradingTimeChecker;

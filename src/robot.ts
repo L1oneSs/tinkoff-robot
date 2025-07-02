@@ -10,7 +10,7 @@ import { Orders } from './account/orders.js';
 import { Portfolio } from './account/portfolio.js';
 import { TelegramNotifier } from './notifications/telegram.js';
 import { TradeTracker } from './trade-tracker/index.js';
-import { ReportScheduler } from './scheduler/index.js';
+import { TradingTimeChecker } from './time-checker/index.js';
 
 const { REAL_ACCOUNT_ID = '', SANDBOX_ACCOUNT_ID = '' } = process.env;
 
@@ -61,7 +61,7 @@ export class Robot {
   // Модули для уведомлений
   telegramNotifier!: TelegramNotifier;
   tradeTracker!: TradeTracker;
-  reportScheduler!: ReportScheduler;
+  tradingTimeChecker!: TradingTimeChecker;
 
   logger: Logger;
 
@@ -121,7 +121,7 @@ export class Robot {
   private initializeModules() {
     this.telegramNotifier = new TelegramNotifier();
     this.tradeTracker = new TradeTracker();
-    this.reportScheduler = new ReportScheduler(); // Только для проверки торгового времени
+    this.tradingTimeChecker = new TradingTimeChecker();
     
     if (this.config.enableNotifications) {
       this.logger.info('Уведомления включены');
@@ -176,7 +176,7 @@ export class Robot {
 
     try {
       // Записываем сделку
-      const trade = this.tradeTracker.recordTrade(tradeData);
+      const trade = await this.tradeTracker.recordTrade(tradeData);
       
       // Отправляем простое уведомление в Telegram
       const notification = this.formatTradeNotification(trade);
@@ -221,16 +221,16 @@ export class Robot {
   }
 
   /**
-   * Получить статус планировщика
+   * Получить статус торгового времени
    */
   getSchedulerStatus(): string {
-    return this.reportScheduler.getStatus();
+    return this.tradingTimeChecker.getStatus();
   }
 
   /**
    * Проверить, торговое ли время
    */
   isTradingTime(): boolean {
-    return this.reportScheduler.isTradingTime();
+    return this.tradingTimeChecker.isTradingTime();
   }
 }
