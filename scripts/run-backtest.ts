@@ -1,4 +1,4 @@
-/* eslint-disable max-statements, complexity, max-lines */
+/* eslint-disable max-statements, complexity, max-lines, max-depth */
 /**
  * Бэктест стратегии на исторических данных с реальными конфигурациями инструментов:
  * 
