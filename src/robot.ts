@@ -126,7 +126,6 @@ export class Robot {
     if (this.config.enableNotifications) {
       this.logger.info('Уведомления включены');
     }
-    this.logger.info('Отчеты отключены - только уведомления о сделках');
   }
 
   /**
