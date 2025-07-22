@@ -25,7 +25,9 @@ export const GMKN_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: базовый тренд + подтверждение силы
-    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.adx() || signals.macd()) && (signals.rsi() || signals.williams()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() || signals.ema()) && (signals.adx() || signals.macd()) && (signals.rsi() || signals.williams()),
     
     // Продажа: прибыль или разворот
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),

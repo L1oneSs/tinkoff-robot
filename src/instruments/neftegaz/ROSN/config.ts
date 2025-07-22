@@ -30,7 +30,9 @@ export const ROSN_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: базовый тренд + подтверждение
-    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.macd() || signals.adx()) && (signals.rsi() || signals.williams()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() || signals.ema()) && (signals.macd() || signals.adx()) && (signals.rsi() || signals.williams()),
     
     // Продажа: прибыль или разворот тренда
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),

@@ -25,7 +25,9 @@ export const NLMK_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + любой моментум
-    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.rsi() || signals.macd() || signals.williams()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() || signals.ema()) && (signals.rsi() || signals.macd() || signals.williams()),
     
     // Продажа: прибыль или разворот тренда
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),

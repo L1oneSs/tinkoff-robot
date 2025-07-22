@@ -24,7 +24,10 @@ export const VTBR_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: любой тренд + любой осциллятор
-    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.ao() || signals.ac() || signals.rsi()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() || signals.ema()) && 
+      (signals.ao() || signals.ac() || signals.rsi()),
     
     // Продажа: прибыль или два индикатора против
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),

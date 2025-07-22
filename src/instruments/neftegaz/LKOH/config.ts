@@ -30,7 +30,9 @@ export const LKOH_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + любой осциллятор
-    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.rsi() || signals.stochastic() || signals.adx()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() || signals.ema()) && (signals.rsi() || signals.stochastic() || signals.adx()),
     
     // Продажа: фиксация прибыли или разворот тренда
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),

@@ -24,8 +24,24 @@ export const CHMF_CONFIG: BaseInstrumentConfig = {
     adx: { period: 14, trendStrengthLevel: 25, strongTrendLevel: 40 }
   },
   triggers: {
-    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.macd()) && (signals.adx() || signals.bollinger()) && !signals.rsi(),
-    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && !signals.macd()) || (!signals.adx() && !signals.bollinger()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() && signals.ema() && signals.macd()) && (signals.adx() || signals.bollinger()) && !signals.rsi(),
+    sellSignal: (signals: SignalContext) => 
+      
+      signals.profit() || 
+      
+        (!signals.sma() || 
+      
+        !signals.ema()) || 
+      
+        (signals.rsi() && 
+      
+        !signals.macd()) || 
+      
+        (!signals.adx() && 
+      
+        !signals.bollinger()),
     description: 'Стальной гигант с циклическим ростом от инфраструктурных проектов'
   }
 };

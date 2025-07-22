@@ -124,15 +124,13 @@ export class Strategy extends RobotModule {
     if (!signals) return;
 
     // Автоматическая инициализация всех сигналов через реестр
-    Object.entries(this.signalRegistry).forEach(([signalName, signalInfo]) => {
+    Object.entries(this.signalRegistry).forEach(([, signalInfo]) => {
       const config = (signals as any)[signalInfo.configKey];
       if (config) {
         signalInfo.instance = new signalInfo.signalClass(this, config);
       }
     });
   }
-
-
 
   /**
    * Входная точка: запуск стратегии.

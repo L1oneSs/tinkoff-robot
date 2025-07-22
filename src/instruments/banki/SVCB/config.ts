@@ -54,7 +54,10 @@ export const SVCB_CONFIG: BaseInstrumentConfig = {
   },
   
   triggers: {
-    buySignal: (signals: SignalContext) => signals.profit() && signals.sma() && (signals.ema() || signals.macd()) && signals.bollinger(),
+    buySignal: (signals: SignalContext) => 
+      
+      signals.profit() && signals.sma() && 
+      (signals.ema() || signals.macd()) && signals.bollinger(),
     sellSignal: (signals: SignalContext) => signals.profit() || !signals.sma() || (signals.rsi() && !signals.macd()),
     description: 'Консервативная стратегия для Совкомбанка с акцентом на управление рисками'
   }

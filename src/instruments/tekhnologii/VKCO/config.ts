@@ -56,8 +56,22 @@ export const VKCO_CONFIG: BaseInstrumentConfig = {
   },
   
   triggers: {
-    buySignal: (signals: SignalContext) => signals.profit() && (signals.sma() && signals.ema()) && (signals.macd() || signals.bollinger()) && signals.adx(),
-    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && !signals.adx()),
+    buySignal: (signals: SignalContext) => 
+      
+      signals.profit() && 
+      
+        (signals.sma() && 
+      
+        signals.ema()) && 
+      
+        (signals.macd() || 
+      
+        signals.bollinger()) && 
+      
+        signals.adx(),
+    sellSignal: (signals: SignalContext) => 
+      
+      signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && !signals.adx()),
     description: 'Стратегия для VK Company с учетом экосистемного потенциала и долговых рисков'
   }
 };

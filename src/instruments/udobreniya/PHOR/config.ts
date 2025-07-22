@@ -25,7 +25,9 @@ export const PHOR_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: любой из трендовых + осциллятор
-    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema() || signals.macd()) && (signals.rsi() || signals.bollinger()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() || signals.ema() || signals.macd()) && (signals.rsi() || signals.bollinger()),
     
     // Продажа: прибыль или все трендовые против
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema() && signals.macd()),

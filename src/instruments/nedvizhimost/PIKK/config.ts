@@ -25,8 +25,29 @@ export const PIKK_CONFIG: BaseInstrumentConfig = {
     stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 }
   },
   triggers: {
-    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.adx()) && (signals.macd() || signals.bollinger()) && (!signals.rsi() || !signals.stochastic()),
-    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && signals.stochastic()) || (!signals.macd() && !signals.adx()),
+    buySignal: (signals: SignalContext) => 
+      
+      (signals.sma() && signals.ema() && 
+   signals.adx()) && 
+   (signals.macd() || 
+   signals.bollinger()) && 
+   (!signals.rsi() || 
+   !signals.stochastic()),
+    sellSignal: (signals: SignalContext) => 
+      
+      signals.profit() || 
+      
+        (!signals.sma() || 
+      
+        !signals.ema()) || 
+      
+        (signals.rsi() && 
+      
+        signals.stochastic()) || 
+      
+        (!signals.macd() && 
+      
+        !signals.adx()),
     description: 'Девелоперский лидер с циклическим ростом от ипотечных программ'
   }
 };

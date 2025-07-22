@@ -23,11 +23,16 @@ export const AFLT_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: хотя бы 2 из 3 групп сигналов должны подтверждать покупку
-    buySignal: (signals: SignalContext) => ((signals.sma() || signals.ema()) && (signals.rsi() || signals.williams())) || ((signals.sma() || signals.ema()) && signals.macd()) || (signals.macd() && signals.bollinger()),
+    buySignal: (signals: SignalContext) => 
+      
+      ((signals.sma() || signals.ema()) && (signals.rsi() || signals.williams())) ||
+      ((signals.sma() || signals.ema()) && signals.macd()) ||
+      (signals.macd() && signals.bollinger()),
     
     // Продажа: только четкие сигналы на выход
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema() && signals.macd()),
     
-    description: 'Аэрофлот: балансированная стратегия с умеренными условиями входа и строгими условиями выхода'
+    description: 'Аэрофлот: балансированная стратегия с умеренными условиями входа ' +
+      'и строгими условиями выхода'
   }
 };

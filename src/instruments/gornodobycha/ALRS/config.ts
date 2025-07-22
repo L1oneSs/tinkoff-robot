@@ -24,8 +24,22 @@ export const ALRS_CONFIG: BaseInstrumentConfig = {
     williams: { period: 14, overboughtLevel: -20, oversoldLevel: -80 }
   },
   triggers: {
-    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.macd()) && (signals.bollinger() || !signals.williams()) && !signals.rsi(),
-    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && signals.williams()) || !signals.macd(),
+    buySignal: (signals: SignalContext) => 
+      (signals.sma() && signals.ema() && signals.macd()) && 
+      (signals.bollinger() || !signals.williams()) && !signals.rsi(),
+    sellSignal: (signals: SignalContext) => 
+      
+      signals.profit() || 
+      
+        (!signals.sma() || 
+      
+        !signals.ema()) || 
+      
+        (signals.rsi() && 
+      
+        signals.williams()) || 
+      
+        !signals.macd(),
     description: 'Алмазный монополист с премиальным позиционированием'
   }
 };

@@ -26,7 +26,9 @@ export const RUAL_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + подтверждение
-    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.supertrend() || signals.macd()) && (signals.rsi() || signals.williams()),
+    buySignal: (signals: SignalContext) => 
+      (signals.sma() || signals.ema()) && (signals.supertrend() || signals.macd()) && 
+      (signals.rsi() || signals.williams()),
     
     // Продажа: прибыль или разворот тренда
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),

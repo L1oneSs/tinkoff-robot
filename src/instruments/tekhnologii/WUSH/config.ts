@@ -50,8 +50,11 @@ export const WUSH_CONFIG: BaseInstrumentConfig = {
   },
   
   triggers: {
-    buySignal: (signals: SignalContext) => signals.profit() && (signals.rsi() || (signals.macd() && signals.ema())) && signals.adx(),
-    sellSignal: (signals: SignalContext) => signals.profit() || (signals.rsi() && signals.bollinger()) || !signals.adx(),
+    buySignal: (signals: SignalContext) => 
+      
+      signals.profit() && (signals.rsi() || (signals.macd() && signals.ema())) && signals.adx(),
+    sellSignal: (signals: SignalContext) => 
+      signals.profit() || (signals.rsi() && signals.bollinger()) || !signals.adx(),
     description: 'Стратегия для технологической акции Whoosh с акцентом на рост и управление рисками'
   }
 };
