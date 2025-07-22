@@ -9,8 +9,6 @@
     "test": "echo 'tbd'",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "accounts": "node --loader ts-node/esm scripts/show-accounts.ts",
-    "candles": "node --loader ts-node/esm scripts/load-candles.ts",
-    "instruments": "node --loader ts-node/esm scripts/load-instruments.ts",
     "backtest": "node --loader ts-node/esm scripts/run-backtest.ts",
     "config": "node --loader ts-node/esm scripts/manage-configs.ts",
     "chart": "open chart/index.html",
@@ -18,10 +16,6 @@
     "market": "node --loader ts-node/esm scripts/run-market.ts",
     "market:real": "node --loader ts-node/esm scripts/run-market.ts --real",
     "deploy": "bash scripts/deploy.sh",
-    "test:notifications": "node --loader ts-node/esm scripts/test-notifications.ts",
-    "scheduler:status": "node --loader ts-node/esm scripts/check-scheduler.ts",
-    "reports:daily": "node --loader ts-node/esm scripts/send-reports.ts daily",
-    "reports:weekly": "node --loader ts-node/esm scripts/send-reports.ts weekly",
     "telegram:chat-id": "node --loader ts-node/esm scripts/get-chat-id.ts"
   },
   "lint-staged": {
