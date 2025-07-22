@@ -1,3 +1,4 @@
+/* eslint-disable max-statements, complexity, max-lines */
 /**
  * Бэктест стратегии на исторических данных с реальными конфигурациями инструментов:
  * 
@@ -94,33 +95,46 @@ interface SignalsSummary {
 
 main();
 
-async function main() {
-  console.log('🚀 Запуск бэктеста стратегии...\n');
-
-  const ticker = process.argv[2];
-  
+function validateAndGetConfig(ticker?: string) {
   if (!ticker) {
     const allConfigs = getActiveNewInstrumentConfigs();
     console.error(`❌ Укажите тикер инструмента!`);
     console.log(`📋 Доступные инструменты: ${allConfigs.map(s => s.ticker).join(', ')}`);
-    return;
+    return null;
   }
   
   const allConfigs = getActiveNewInstrumentConfigs();
-  
   const strategyConfig = allConfigs.find(s => s.ticker === ticker.toUpperCase());
+  
   if (!strategyConfig) {
     console.error(`❌ Инструмент ${ticker.toUpperCase()} не найден в конфигурации!`);
     console.log(`📋 Доступные инструменты: ${allConfigs.map(s => s.ticker).join(', ')}`);
-    return;
+    return null;
   }
   
+  return strategyConfig;
+}
+
+function printBacktestInfo(strategyConfig: BaseInstrumentConfig) {
   console.log(`📊 Тестируем инструмент: ${strategyConfig.figi} (${strategyConfig.ticker})`);
   console.log(`📅 Период: ${BACKTEST_CONFIG.daysBack} дней назад`);
   console.log(`💰 Начальный баланс: ${BACKTEST_CONFIG.initialBalance.toLocaleString()} руб.`);
   console.log(`💸 Комиссия: ${BACKTEST_CONFIG.commission}%`);
   console.log(`⏰ Торговое время: ${BACKTEST_CONFIG.useRealTradingHours ? '10:00-19:00 МСК (пн-пт)' : '24/7'}`);
-  console.log(`� Интервал свечей: 5 минут (как на сервере)\n`);
+  console.log(`🕐 Интервал свечей: 5 минут (как на сервере)\n`);
+}
+
+async function main() {
+  console.log('🚀 Запуск бэктеста стратегии...\n');
+
+  const ticker = process.argv[2];
+  const strategyConfig = validateAndGetConfig(ticker);
+  
+  if (!strategyConfig) {
+    return;
+  }
+  
+  printBacktestInfo(strategyConfig);
 
   const instrumentInfo = await getInstrumentInfo(strategyConfig.figi);
   if (!instrumentInfo) {
@@ -164,28 +178,6 @@ async function getInstrumentInfo(figi: string): Promise<InstrumentInfo | null> {
   } catch (error) {
     console.error('Ошибка получения информации об инструменте:', error);
     return null;
-  }
-}
-
-async function loadHistoricalData(figi: string, interval: CandleInterval): Promise<HistoricCandle[]> {
-  const to = new Date();
-  const from = new Date();
-  from.setDate(from.getDate() - BACKTEST_CONFIG.chunkSizeDays);
-
-  console.log(`📡 Загружаем порцию данных: ${from.toLocaleDateString()} - ${to.toLocaleDateString()}...`);
-
-  try {
-    const { candles } = await api.marketdata.getCandles({
-      figi,
-      from,
-      to,
-      interval,
-    });
-
-    return candles;
-  } catch (error) {
-    console.error('Ошибка загрузки исторических данных:', error);
-    return [];
   }
 }
 
@@ -252,32 +244,21 @@ async function loadHistoricalDataInChunks(figi: string, candleIntervalName: stri
   return allCandles;
 }
 
-async function runBacktest(
-  strategyConfig: BaseInstrumentConfig, 
-  candles: HistoricCandle[], 
-  instrumentInfo: InstrumentInfo
-): Promise<BacktestResult> {
-  console.log('🔄 Начинаем симуляцию торговли...\n');
-  
-  let balance = BACKTEST_CONFIG.initialBalance;
-  let position = 0; // Количество акций в позиции
-  let positionValue = 0; // Стоимость позиции
-  const trades: TradeRecord[] = [];
-  const signalsSummary: SignalsSummary = {};
-  
-  const signalInstances: { [key: string]: any } = {};
-  
-  // Заглушка для Strategy с минимально необходимыми свойствами
-  const mockStrategy = {
+function createMockStrategy() {
+  return {
     logger: {
-      withPrefix: (prefix: string) => ({
-        debug: () => {},
-        info: () => {},
-        warn: () => {},
-        error: () => {}
+      withPrefix: () => ({
+        debug: () => { /* empty */ },
+        info: () => { /* empty */ },
+        warn: () => { /* empty */ },
+        error: () => { /* empty */ }
       })
     }
   } as any;
+}
+
+function createBasicSignals(strategyConfig: BaseInstrumentConfig, mockStrategy: any) {
+  const signalInstances: { [key: string]: any } = {};
   
   if (strategyConfig.signals?.profit) {
     signalInstances.profit = new ProfitLossSignal(mockStrategy, strategyConfig.signals.profit);
@@ -297,6 +278,13 @@ async function runBacktest(
   if (strategyConfig.signals?.bollinger) {
     signalInstances.bollinger = new BollingerBandsSignal(mockStrategy, strategyConfig.signals.bollinger);
   }
+  
+  return signalInstances;
+}
+
+function createOscillatorSignals(strategyConfig: BaseInstrumentConfig, mockStrategy: any) {
+  const signalInstances: { [key: string]: any } = {};
+  
   if (strategyConfig.signals?.williams) {
     signalInstances.williams = new WilliamsRSignal(mockStrategy, strategyConfig.signals.williams);
   }
@@ -312,6 +300,13 @@ async function runBacktest(
   if (strategyConfig.signals?.stochastic) {
     signalInstances.stochastic = new StochasticSignal(mockStrategy, strategyConfig.signals.stochastic);
   }
+  
+  return signalInstances;
+}
+
+function createTrendSignals(strategyConfig: BaseInstrumentConfig, mockStrategy: any) {
+  const signalInstances: { [key: string]: any } = {};
+  
   if (strategyConfig.signals?.adx) {
     signalInstances.adx = new AdxSignal(mockStrategy, strategyConfig.signals.adx);
   }
@@ -328,7 +323,20 @@ async function runBacktest(
     signalInstances.roc = new RocSignal(mockStrategy, strategyConfig.signals.roc);
   }
   
-  // Свечные паттерны
+  return signalInstances;
+}
+
+function createTechnicalIndicatorSignals(strategyConfig: BaseInstrumentConfig, mockStrategy: any) {
+  const basicSignals = createBasicSignals(strategyConfig, mockStrategy);
+  const oscillatorSignals = createOscillatorSignals(strategyConfig, mockStrategy);
+  const trendSignals = createTrendSignals(strategyConfig, mockStrategy);
+  
+  return { ...basicSignals, ...oscillatorSignals, ...trendSignals };
+}
+
+function createCandlestickPatternSignals(strategyConfig: BaseInstrumentConfig, mockStrategy: any) {
+  const signalInstances: { [key: string]: any } = {};
+  
   if (strategyConfig.signals?.hammer) {
     signalInstances.hammer = new HammerSignal(mockStrategy, strategyConfig.signals.hammer);
   }
@@ -353,6 +361,32 @@ async function runBacktest(
   if (strategyConfig.signals?.threeBlackCrows) {
     signalInstances.threeBlackCrows = new ThreeBlackCrowsSignal(mockStrategy, strategyConfig.signals.threeBlackCrows);
   }
+  
+  return signalInstances;
+}
+
+function createSignalInstances(strategyConfig: BaseInstrumentConfig) {
+  const mockStrategy = createMockStrategy();
+  const technicalSignals = createTechnicalIndicatorSignals(strategyConfig, mockStrategy);
+  const candlestickSignals = createCandlestickPatternSignals(strategyConfig, mockStrategy);
+  
+  return { ...technicalSignals, ...candlestickSignals };
+}
+
+async function runBacktest(
+  strategyConfig: BaseInstrumentConfig, 
+  candles: HistoricCandle[], 
+  instrumentInfo: InstrumentInfo
+): Promise<BacktestResult> {
+  console.log('🔄 Начинаем симуляцию торговли...\n');
+  
+  let balance = BACKTEST_CONFIG.initialBalance;
+  let position = 0; // Количество акций в позиции
+  let positionValue = 0; // Стоимость позиции
+  const trades: TradeRecord[] = [];
+  const signalsSummary: SignalsSummary = {};
+  
+  const signalInstances = createSignalInstances(strategyConfig);
   
   // Минимальное количество свечей для начала торговли (для индикаторов)
   const minCandles = 50;
@@ -385,8 +419,7 @@ async function runBacktest(
     const candleHistory = candles.slice(0, i + 1);
     
     const signalResults: { [key: string]: 'buy' | 'sell' | void } = {};
-    let currentBalance = balance + (position > 0 ? position * currentPrice : 0);
-    
+
     for (const [signalName, signalInstance] of Object.entries(signalInstances)) {
       if (signalName === 'profit' && position > 0) {
         const currentProfit = ((position * currentPrice - positionValue) / positionValue) * 100;
@@ -467,7 +500,7 @@ async function runBacktest(
     const buySignal = strategyConfig.triggers?.buySignal(signalContext);
     const sellSignal = strategyConfig.triggers?.sellSignal(sellSignalContext);
     
-    let triggerSignals: string[] = [];
+    const triggerSignals: string[] = [];
     if (buySignal) {
       for (const [signalName, result] of Object.entries(signalResults)) {
         if (result === 'buy' && signalContext[signalName as keyof SignalContext]?.()) {
@@ -548,7 +581,6 @@ async function runBacktest(
           signalsSummary[signal].profitable++;
         }
       }
-      
 
       if (triggerSignals.length > 1) {
         const combinedSignal = triggerSignal; 
@@ -570,7 +602,6 @@ async function runBacktest(
   }
   
   // Подсчитываем статистику
-  const totalProfit = balance - BACKTEST_CONFIG.initialBalance;
   // Если есть открытая позиция, добавляем её текущую стоимость к балансу (но не создаем сделку)
   const finalBalance = balance + (position > 0 ? position * (candles[candles.length - 1].close ? Helpers.toNumber(candles[candles.length - 1].close!) : 0) : 0);
   const finalProfit = finalBalance - BACKTEST_CONFIG.initialBalance;
@@ -615,7 +646,7 @@ async function runBacktest(
   };
 }
 
-function printResults(result: BacktestResult) {
+function printSummary(result: BacktestResult) {
   console.log('\n' + '='.repeat(60));
   console.log('📊 РЕЗУЛЬТАТЫ БЭКТЕСТА');
   console.log('='.repeat(60));
@@ -627,7 +658,6 @@ function printResults(result: BacktestResult) {
   console.log(`📊 Всего сделок: ${result.totalTrades}`);
   console.log(`✅ Прибыльных сделок: ${result.profitableTrades} (${result.totalTrades > 0 ? (result.profitableTrades / result.totalTrades * 100).toFixed(1) : 0}%)`);
   
-  // Показываем информацию о незакрытых позициях если есть
   const hasPendingPosition = result.trades.filter(t => t.type === 'BUY').length > result.trades.filter(t => t.type === 'SELL').length;
   if (hasPendingPosition) {
     console.log(`📋 Есть незакрытая позиция (учтена в итоговом балансе по рыночной цене)`);
@@ -635,50 +665,55 @@ function printResults(result: BacktestResult) {
   
   console.log(`📉 Максимальная просадка: ${result.maxDrawdown.toFixed(2)}%`);
   console.log(`📊 Коэффициент Шарпа: ${result.sharpeRatio.toFixed(2)}`);
-  
+}
+
+function printSignalsStatistics(result: BacktestResult) {
   console.log(`\n📊 Статистика по сигналам:`);
   for (const [signal, stats] of Object.entries(result.signalsSummary)) {
     const winRate = stats.total > 0 ? (stats.profitable / stats.total * 100).toFixed(1) : '0';
     console.log(`  ${signal}: ${stats.total} сделок, ${stats.profitable} прибыльных (${winRate}%), прибыль: ${stats.totalProfit.toFixed(2)} руб.`);
   }
-  
-  // Детальный вывод всех сделок
+}
+
+function printTradeDetails(result: BacktestResult) {
   console.log(`\n📋 ДЕТАЛИ ВСЕХ СДЕЛОК:`);
   console.log('='.repeat(60));
   
   if (result.trades.length === 0) {
     console.log('❌ Сделок не было');
-  } else {
-    let currentProfit = 0;
-    for (let i = 0; i < result.trades.length; i++) {
-      const trade = result.trades[i];
-      const dateStr = trade.date.toLocaleDateString('ru-RU');
-      const timeStr = trade.date.toLocaleTimeString('ru-RU');
-      
-      if (trade.type === 'BUY') {
-        console.log(`${i + 1}. 🟢 ПОКУПКА | ${dateStr} ${timeStr}`);
-        console.log(`   Количество: ${trade.quantity} шт.`);
-        console.log(`   Цена: ${trade.price.toFixed(2)} руб.`);
-        console.log(`   Сумма: ${trade.amount.toFixed(2)} руб. (с комиссией)`);
-        console.log(`   Сигнал: ${trade.signal}`);
-        console.log(`   Баланс после покупки: ${trade.balance.toFixed(2)} руб.`);
-      } else {
-        currentProfit += trade.profit || 0;
-        const profitIcon = (trade.profit || 0) > 0 ? '📈' : '📉';
-        console.log(`${i + 1}. 🔴 ПРОДАЖА | ${dateStr} ${timeStr}`);
-        console.log(`   Количество: ${trade.quantity} шт.`);
-        console.log(`   Цена: ${trade.price.toFixed(2)} руб.`);
-        console.log(`   Сумма: ${trade.amount.toFixed(2)} руб. (после комиссии)`);
-        console.log(`   Сигнал: ${trade.signal}`);
-        console.log(`   ${profitIcon} Прибыль/убыток: ${(trade.profit || 0).toFixed(2)} руб.`);
-        console.log(`   Накопленная прибыль: ${currentProfit.toFixed(2)} руб.`);
-        console.log(`   Баланс после продажи: ${trade.balance.toFixed(2)} руб.`);
-      }
-      console.log('');
-    }
+    return;
   }
   
-  // Проверяем наличие незакрытых позиций
+  let currentProfit = 0;
+  for (let i = 0; i < result.trades.length; i++) {
+    const trade = result.trades[i];
+    const dateStr = trade.date.toLocaleDateString('ru-RU');
+    const timeStr = trade.date.toLocaleTimeString('ru-RU');
+    
+    if (trade.type === 'BUY') {
+      console.log(`${i + 1}. 🟢 ПОКУПКА | ${dateStr} ${timeStr}`);
+      console.log(`   Количество: ${trade.quantity} шт.`);
+      console.log(`   Цена: ${trade.price.toFixed(2)} руб.`);
+      console.log(`   Сумма: ${trade.amount.toFixed(2)} руб. (с комиссией)`);
+      console.log(`   Сигнал: ${trade.signal}`);
+      console.log(`   Баланс после покупки: ${trade.balance.toFixed(2)} руб.`);
+    } else {
+      currentProfit += trade.profit || 0;
+      const profitIcon = (trade.profit || 0) > 0 ? '📈' : '📉';
+      console.log(`${i + 1}. 🔴 ПРОДАЖА | ${dateStr} ${timeStr}`);
+      console.log(`   Количество: ${trade.quantity} шт.`);
+      console.log(`   Цена: ${trade.price.toFixed(2)} руб.`);
+      console.log(`   Сумма: ${trade.amount.toFixed(2)} руб. (после комиссии)`);
+      console.log(`   Сигнал: ${trade.signal}`);
+      console.log(`   ${profitIcon} Прибыль/убыток: ${(trade.profit || 0).toFixed(2)} руб.`);
+      console.log(`   Накопленная прибыль: ${currentProfit.toFixed(2)} руб.`);
+      console.log(`   Баланс после продажи: ${trade.balance.toFixed(2)} руб.`);
+    }
+    console.log('');
+  }
+}
+
+function printFinalMessages(result: BacktestResult) {
   const lastCandle = result.trades.length > 0 ? result.trades[result.trades.length - 1] : null;
   if (lastCandle && result.trades.filter(t => t.type === 'BUY').length > result.trades.filter(t => t.type === 'SELL').length) {
     console.log(`⚠️  ВНИМАНИЕ: Остались незакрытые позиции!`);
@@ -693,4 +728,11 @@ function printResults(result: BacktestResult) {
   }
   
   console.log('='.repeat(60));
+}
+
+function printResults(result: BacktestResult) {
+  printSummary(result);
+  printSignalsStatistics(result);
+  printTradeDetails(result);
+  printFinalMessages(result);
 }
