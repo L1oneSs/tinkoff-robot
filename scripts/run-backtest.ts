@@ -48,7 +48,7 @@ import {
 // Параметры бэктеста
 const BACKTEST_CONFIG = {
   // Период для бэктеста (последние N дней)
-  daysBack: 21, 
+  daysBack: 60, 
   // Начальная сумма для симуляции
   initialBalance: 13000, // 13,000 рублей
   // Комиссия брокера (в процентах)
@@ -504,13 +504,30 @@ async function runBacktest(
     if (buySignal) {
       for (const [signalName, result] of Object.entries(signalResults)) {
         if (result === 'buy' && signalContext[signalName as keyof SignalContext]?.()) {
-          triggerSignals.push(signalName);
+          const testContext = { ...signalContext };
+          for (const key of Object.keys(testContext)) {
+            if (key !== signalName) {
+              (testContext as any)[key] = () => false;
+            }
+          }
+          if (strategyConfig.triggers?.buySignal(testContext)) {
+            triggerSignals.push(signalName);
+          }
         }
       }
     } else if (sellSignal) {
+      // Аналогично для продажи
       for (const [signalName, result] of Object.entries(signalResults)) {
         if (result === 'sell' && sellSignalContext[signalName as keyof SignalContext]?.()) {
-          triggerSignals.push(signalName);
+          const testContext = { ...sellSignalContext };
+          for (const key of Object.keys(testContext)) {
+            if (key !== signalName) {
+              (testContext as any)[key] = () => false;
+            }
+          }
+          if (strategyConfig.triggers?.sellSignal(testContext)) {
+            triggerSignals.push(signalName);
+          }
         }
       }
     }

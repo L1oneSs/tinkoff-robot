@@ -11,7 +11,7 @@ export const SVCB_CONFIG: BaseInstrumentConfig = {
   name: 'Совкомбанк',
   ticker: 'SVCB',
   sector: 'Банки',
-  orderLots: 1, 
+  orderLots: 20, 
   
   signals: {
     profit: {
@@ -56,9 +56,8 @@ export const SVCB_CONFIG: BaseInstrumentConfig = {
   triggers: {
     buySignal: (signals: SignalContext) => 
       
-      signals.profit() && signals.sma() && 
-      (signals.ema() || signals.macd()) && signals.bollinger(),
-    sellSignal: (signals: SignalContext) => signals.profit() || !signals.sma() || (signals.rsi() && !signals.macd()),
+      signals.bollinger() || signals.sma(),
+    sellSignal: (signals: SignalContext) => signals.profit() || signals.sma() || (signals.rsi() && signals.macd()),
     description: 'Консервативная стратегия для Совкомбанка с акцентом на управление рисками'
   }
 };
