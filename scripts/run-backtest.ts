@@ -14,7 +14,6 @@ import { CandleInterval, HistoricCandle } from 'tinkoff-invest-api/dist/generate
 import { InstrumentInfo, BaseInstrumentConfig, SignalContext } from '../src/instruments/base-config.js';
 import { getActiveNewInstrumentConfigs } from '../src/instrument-configs.js';
 
-// Импортируем сигналы для вычислений
 import { ProfitLossSignal } from '../src/signals/profit-loss.js';
 import { 
   SmaCrossoverSignal,
@@ -34,7 +33,6 @@ import {
   RocSignal
 } from '../src/signals/self-trading-indicators/index.js';
 
-// Импортируем свечные паттерны
 import {
   HammerSignal,
   ShootingStarSignal,
@@ -49,20 +47,19 @@ import {
 // Параметры бэктеста
 const BACKTEST_CONFIG = {
   // Период для бэктеста (последние N дней)
-  daysBack: 21, // Покрываем период с 7 по 21 июля (21 день назад от сегодня)
+  daysBack: 21, 
   // Начальная сумма для симуляции
   initialBalance: 13000, // 13,000 рублей
   // Комиссия брокера (в процентах)
   commission: 0.3,
   // Симулировать торговые часы как на сервере (10:00-19:00 МСК, пн-пт)
-  useRealTradingHours: true, // Отключаем для точного сравнения с реальными сделками в UTC
+  useRealTradingHours: true, 
   // Интервал свечей для анализа (можно менять: CANDLE_INTERVAL_5_MIN, CANDLE_INTERVAL_1_HOUR, etc.)
   candleInterval: 'CANDLE_INTERVAL_5_MIN' as const,
   // Размер порции для загрузки (дней) - API ограничивает 7 дней для 5-минутных свечей
   chunkSizeDays: 7,
 };
 
-// Результаты симуляции
 interface BacktestResult {
   instrument: string;
   ticker: string;
@@ -99,14 +96,18 @@ main();
 
 async function main() {
   console.log('🚀 Запуск бэктеста стратегии...\n');
-  
-  // Получаем тикер из аргументов командной строки
+
   const ticker = process.argv[2];
   
-  // Получаем все активные конфигурации инструментов
+  if (!ticker) {
+    const allConfigs = getActiveNewInstrumentConfigs();
+    console.error(`❌ Укажите тикер инструмента!`);
+    console.log(`📋 Доступные инструменты: ${allConfigs.map(s => s.ticker).join(', ')}`);
+    return;
+  }
+  
   const allConfigs = getActiveNewInstrumentConfigs();
   
-  // Ищем конфигурацию инструмента по тикеру
   const strategyConfig = allConfigs.find(s => s.ticker === ticker.toUpperCase());
   if (!strategyConfig) {
     console.error(`❌ Инструмент ${ticker.toUpperCase()} не найден в конфигурации!`);
@@ -121,7 +122,6 @@ async function main() {
   console.log(`⏰ Торговое время: ${BACKTEST_CONFIG.useRealTradingHours ? '10:00-19:00 МСК (пн-пт)' : '24/7'}`);
   console.log(`� Интервал свечей: 5 минут (как на сервере)\n`);
 
-  // Получаем информацию об инструменте
   const instrumentInfo = await getInstrumentInfo(strategyConfig.figi);
   if (!instrumentInfo) {
     console.error('❌ Не удалось получить информацию об инструменте!');
@@ -131,7 +131,6 @@ async function main() {
   console.log(`🏷️  Инструмент: ${instrumentInfo.name} (${instrumentInfo.ticker})`);
   console.log(`🏭 Сектор: ${strategyConfig.sector}\n`);
 
-  // Загружаем исторические данные порциями
   const candles = await loadHistoricalDataInChunks(strategyConfig.figi, BACKTEST_CONFIG.candleInterval);
   if (candles.length === 0) {
     console.error('❌ Не удалось загрузить исторические данные!');
@@ -141,10 +140,8 @@ async function main() {
   console.log(`📈 Загружено свечей: ${candles.length}`);
   console.log(`📅 Период: ${candles[0].time?.toLocaleDateString()} - ${candles[candles.length - 1].time?.toLocaleDateString()}\n`);
 
-  // Запускаем бэктест
   const result = await runBacktest(strategyConfig, candles, instrumentInfo);
   
-  // Выводим результаты
   printResults(result);
 }
 
@@ -214,7 +211,6 @@ async function loadHistoricalDataInChunks(figi: string, candleIntervalName: stri
   const totalDays = BACKTEST_CONFIG.daysBack;
   const chunkSize = BACKTEST_CONFIG.chunkSizeDays;
   
-  // Загружаем данные порциями от самого старого к новому
   for (let daysAgo = totalDays; daysAgo > 0; daysAgo -= chunkSize) {
     const chunkEnd = Math.max(0, daysAgo - chunkSize);
     
@@ -237,18 +233,15 @@ async function loadHistoricalDataInChunks(figi: string, candleIntervalName: stri
       console.log(`   ✅ Загружено ${candles.length} свечей`);
       allCandles.push(...candles);
       
-      // Пауза между запросами чтобы не превысить лимиты API
       if (daysAgo > chunkSize) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
     } catch (error) {
       console.error(`❌ Ошибка загрузки порции ${from.toLocaleDateString()} - ${to.toLocaleDateString()}:`, error);
-      // Продолжаем загрузку других порций
     }
   }
   
-  // Сортируем свечи по времени (на всякий случай)
   allCandles.sort((a, b) => {
     const timeA = a.time?.getTime() || 0;
     const timeB = b.time?.getTime() || 0;
@@ -272,10 +265,9 @@ async function runBacktest(
   const trades: TradeRecord[] = [];
   const signalsSummary: SignalsSummary = {};
   
-  // Создаем объекты сигналов из конфигурации
   const signalInstances: { [key: string]: any } = {};
   
-  // Создаем заглушку для Strategy с минимально необходимыми свойствами
+  // Заглушка для Strategy с минимально необходимыми свойствами
   const mockStrategy = {
     logger: {
       withPrefix: (prefix: string) => ({
@@ -365,7 +357,6 @@ async function runBacktest(
   // Минимальное количество свечей для начала торговли (для индикаторов)
   const minCandles = 50;
   
-  // Вспомогательная функция для проверки торгового времени
   const isTradingTime = (date: Date): boolean => {
     if (!BACKTEST_CONFIG.useRealTradingHours) {
       return true; // Торгуем 24/7 если отключена проверка
@@ -391,16 +382,13 @@ async function runBacktest(
       continue; // Пропускаем анализ вне торгового времени
     }
     
-    // Берем историю свечей для расчета сигналов
     const candleHistory = candles.slice(0, i + 1);
     
-    // Рассчитываем все сигналы
     const signalResults: { [key: string]: 'buy' | 'sell' | void } = {};
     let currentBalance = balance + (position > 0 ? position * currentPrice : 0);
     
     for (const [signalName, signalInstance] of Object.entries(signalInstances)) {
       if (signalName === 'profit' && position > 0) {
-        // Для profit/loss нужна текущая прибыль
         const currentProfit = ((position * currentPrice - positionValue) / positionValue) * 100;
         signalResults[signalName] = signalInstance.calc({ 
           candles: candleHistory, 
@@ -414,7 +402,6 @@ async function runBacktest(
       }
     }
     
-    // Отладка: выводим сигналы каждые 50 свечей или когда есть активность
     const shouldShowDebug = (i % 50 === 0) || Object.values(signalResults).some(r => r === 'buy' || r === 'sell');
     const tradingTimeStatus = isTradingTime(currentCandle.time || new Date()) ? '🟢' : '🔴';
     
@@ -423,7 +410,6 @@ async function runBacktest(
       console.log(`  Сигналы:`, signalResults);
     }
     
-    // Создаем контекст сигналов для триггеров
     const signalContext: SignalContext = {
       profit: () => signalResults.profit === 'sell', 
       sma: () => signalResults.sma === 'buy',
@@ -441,8 +427,6 @@ async function runBacktest(
       roc: () => signalResults.roc === 'buy',
       ac: () => signalResults.ac === 'buy',
       ao: () => signalResults.ao === 'buy',
-      
-      // Свечные паттерны
       hammer: () => signalResults.hammer === 'buy',
       shootingStar: () => signalResults.shootingStar === 'sell', // ShootingStar - медвежий паттерн
       harami: () => signalResults.harami === 'buy',
@@ -453,7 +437,6 @@ async function runBacktest(
       threeBlackCrows: () => signalResults.threeBlackCrows === 'sell'
     };
     
-    // Также нужен контекст для sell сигналов
     const sellSignalContext: SignalContext = {
       profit: () => signalResults.profit === 'sell', 
       sma: () => signalResults.sma === 'sell',
@@ -471,8 +454,6 @@ async function runBacktest(
       roc: () => signalResults.roc === 'sell',
       ac: () => signalResults.ac === 'sell',
       ao: () => signalResults.ao === 'sell',
-      
-      // Свечные паттерны для продажи
       hammer: () => signalResults.hammer === 'sell',
       shootingStar: () => signalResults.shootingStar === 'sell',
       harami: () => signalResults.harami === 'sell', 
@@ -483,29 +464,25 @@ async function runBacktest(
       threeBlackCrows: () => signalResults.threeBlackCrows === 'sell'
     };
     
-    // Получаем решение о покупке/продаже из конфигурации инструмента
     const buySignal = strategyConfig.triggers?.buySignal(signalContext);
     const sellSignal = strategyConfig.triggers?.sellSignal(sellSignalContext);
     
-    // Определяем какой именно сигнал сработал (для статистики)
-    let triggerSignal = 'unknown';
+    let triggerSignals: string[] = [];
     if (buySignal) {
-      // Для покупки ищем активные buy сигналы
       for (const [signalName, result] of Object.entries(signalResults)) {
         if (result === 'buy' && signalContext[signalName as keyof SignalContext]?.()) {
-          triggerSignal = signalName;
-          break;
+          triggerSignals.push(signalName);
         }
       }
     } else if (sellSignal) {
-      // Для продажи ищем активные sell сигналы
       for (const [signalName, result] of Object.entries(signalResults)) {
         if (result === 'sell' && sellSignalContext[signalName as keyof SignalContext]?.()) {
-          triggerSignal = signalName;
-          break;
+          triggerSignals.push(signalName);
         }
       }
     }
+    
+    const triggerSignal = triggerSignals.length > 0 ? triggerSignals.join('+') : 'unknown';
     
     // Покупка (если нет позиции)
     if (buySignal && position === 0) {
@@ -560,14 +537,29 @@ async function runBacktest(
       
       trades.push(trade);
       
-      // Обновляем статистику сигналов
-      if (!signalsSummary[triggerSignal]) {
-        signalsSummary[triggerSignal] = { total: 0, profitable: 0, totalProfit: 0 };
+      // Обновляем статистику сигналов для каждого из активных сигналов
+      for (const signal of triggerSignals) {
+        if (!signalsSummary[signal]) {
+          signalsSummary[signal] = { total: 0, profitable: 0, totalProfit: 0 };
+        }
+        signalsSummary[signal].total++;
+        signalsSummary[signal].totalProfit += profit;
+        if (profit > 0) {
+          signalsSummary[signal].profitable++;
+        }
       }
-      signalsSummary[triggerSignal].total++;
-      signalsSummary[triggerSignal].totalProfit += profit;
-      if (profit > 0) {
-        signalsSummary[triggerSignal].profitable++;
+      
+
+      if (triggerSignals.length > 1) {
+        const combinedSignal = triggerSignal; 
+        if (!signalsSummary[combinedSignal]) {
+          signalsSummary[combinedSignal] = { total: 0, profitable: 0, totalProfit: 0 };
+        }
+        signalsSummary[combinedSignal].total++;
+        signalsSummary[combinedSignal].totalProfit += profit;
+        if (profit > 0) {
+          signalsSummary[combinedSignal].profitable++;
+        }
       }
       
       console.log(`🔴 ПРОДАЖА | ${trade.date.toLocaleDateString()}, ${trade.date.toLocaleTimeString()} | ${position}x${currentPrice.toFixed(2)} = ${netAmount.toFixed(2)} руб. | Прибыль: ${profit.toFixed(2)} руб. | Сигнал: ${triggerSignal}`);
@@ -602,7 +594,7 @@ async function runBacktest(
     }
   }
   
-  // Коэффициент Шарпа (упрощенный)
+  // Коэффициент Шарпа
   const returns = trades.filter(t => t.type === 'SELL').map(t => t.profit! / BACKTEST_CONFIG.initialBalance);
   const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
   const variance = returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length;
