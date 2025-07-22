@@ -417,7 +417,7 @@ async function runBacktest(
     
     // Создаем контекст сигналов для триггеров
     const signalContext: SignalContext = {
-      profit: () => signalResults.profit === 'sell', // Profit всегда только sell сигнал
+      profit: () => signalResults.profit === 'sell', 
       sma: () => signalResults.sma === 'buy',
       rsi: () => signalResults.rsi === 'buy', 
       bollinger: () => signalResults.bollinger === 'buy',
@@ -475,21 +475,20 @@ async function runBacktest(
     const buySignal = strategyConfig.triggers?.buySignal(signalContext);
     const sellSignal = strategyConfig.triggers?.sellSignal(sellSignalContext);
     
-    // Отладка триггеров - проверим конкретный случай
-    if (i === 381 || i === 541) {
-      console.log(`ДЕТАЛЬНАЯ ОТЛАДКА свечи ${i}:`);
-      console.log(`  Сигналы:`, signalResults);
-      console.log(`  signalContext.sma()=${signalContext.sma()}, signalContext.ema()=${signalContext.ema()}`);
-      console.log(`  signalContext.ao()=${signalContext.ao()}, signalContext.ac()=${signalContext.ac()}, signalContext.rsi()=${signalContext.rsi()}`);
-      console.log(`  Триггер: BUY=${buySignal}, SELL=${sellSignal}`);
-      console.log(`  Условие покупки: (sma || ema) && (ao || ac || rsi) = (${signalContext.sma()} || ${signalContext.ema()}) && (${signalContext.ao()} || ${signalContext.ac()} || ${signalContext.rsi()})`);
-    }
-    
     // Определяем какой именно сигнал сработал (для статистики)
     let triggerSignal = 'unknown';
-    if (buySignal || sellSignal) {
+    if (buySignal) {
+      // Для покупки ищем активные buy сигналы
       for (const [signalName, result] of Object.entries(signalResults)) {
-        if (result === 'buy' || result === 'sell') {
+        if (result === 'buy' && signalContext[signalName as keyof SignalContext]?.()) {
+          triggerSignal = signalName;
+          break;
+        }
+      }
+    } else if (sellSignal) {
+      // Для продажи ищем активные sell сигналы
+      for (const [signalName, result] of Object.entries(signalResults)) {
+        if (result === 'sell' && sellSignalContext[signalName as keyof SignalContext]?.()) {
           triggerSignal = signalName;
           break;
         }
@@ -566,34 +565,12 @@ async function runBacktest(
     }
   }
   
-  // Если остались акции в позиции, продаем по последней цене
-  if (position > 0) {
-    const lastPrice = candles[candles.length - 1].close ? Helpers.toNumber(candles[candles.length - 1].close!) : 0;
-    const grossAmount = position * lastPrice;
-    const commission = grossAmount * (BACKTEST_CONFIG.commission / 100);
-    const netAmount = grossAmount - commission;
-    const profit = netAmount - positionValue;
-    
-    balance += netAmount;
-    
-    const trade: TradeRecord = {
-      date: candles[candles.length - 1].time || new Date(),
-      type: 'SELL',
-      price: lastPrice,
-      quantity: position,
-      amount: netAmount,
-      balance,
-      profit,
-      signal: 'force_close'
-    };
-    
-    trades.push(trade);
-    console.log(`🔴 ЗАКРЫТИЕ ПОЗИЦИИ | ${trade.date.toLocaleDateString()}, ${trade.date.toLocaleTimeString()} | ${position}x${lastPrice.toFixed(2)} = ${netAmount.toFixed(2)} руб. | Прибыль: ${profit.toFixed(2)} руб.`);
-  }
-  
   // Подсчитываем статистику
   const totalProfit = balance - BACKTEST_CONFIG.initialBalance;
-  const totalProfitPercent = (totalProfit / BACKTEST_CONFIG.initialBalance) * 100;
+  // Если есть открытая позиция, добавляем её текущую стоимость к балансу (но не создаем сделку)
+  const finalBalance = balance + (position > 0 ? position * (candles[candles.length - 1].close ? Helpers.toNumber(candles[candles.length - 1].close!) : 0) : 0);
+  const finalProfit = finalBalance - BACKTEST_CONFIG.initialBalance;
+  const totalProfitPercent = (finalProfit / BACKTEST_CONFIG.initialBalance) * 100;
   const profitableTrades = trades.filter(t => t.type === 'SELL' && t.profit! > 0).length;
   const sellTrades = trades.filter(t => t.type === 'SELL').length;
   
@@ -625,7 +602,7 @@ async function runBacktest(
     ticker: instrumentInfo.ticker,
     totalTrades: sellTrades,
     profitableTrades,
-    totalProfit,
+    totalProfit: finalProfit,
     totalProfitPercent,
     maxDrawdown,
     sharpeRatio,
@@ -645,6 +622,13 @@ function printResults(result: BacktestResult) {
   console.log(`📈 Общая прибыль: ${result.totalProfit.toFixed(2)} руб. (${result.totalProfitPercent.toFixed(2)}%)`);
   console.log(`📊 Всего сделок: ${result.totalTrades}`);
   console.log(`✅ Прибыльных сделок: ${result.profitableTrades} (${result.totalTrades > 0 ? (result.profitableTrades / result.totalTrades * 100).toFixed(1) : 0}%)`);
+  
+  // Показываем информацию о незакрытых позициях если есть
+  const hasPendingPosition = result.trades.filter(t => t.type === 'BUY').length > result.trades.filter(t => t.type === 'SELL').length;
+  if (hasPendingPosition) {
+    console.log(`📋 Есть незакрытая позиция (учтена в итоговом балансе по рыночной цене)`);
+  }
+  
   console.log(`📉 Максимальная просадка: ${result.maxDrawdown.toFixed(2)}%`);
   console.log(`📊 Коэффициент Шарпа: ${result.sharpeRatio.toFixed(2)}`);
   
@@ -652,6 +636,50 @@ function printResults(result: BacktestResult) {
   for (const [signal, stats] of Object.entries(result.signalsSummary)) {
     const winRate = stats.total > 0 ? (stats.profitable / stats.total * 100).toFixed(1) : '0';
     console.log(`  ${signal}: ${stats.total} сделок, ${stats.profitable} прибыльных (${winRate}%), прибыль: ${stats.totalProfit.toFixed(2)} руб.`);
+  }
+  
+  // Детальный вывод всех сделок
+  console.log(`\n📋 ДЕТАЛИ ВСЕХ СДЕЛОК:`);
+  console.log('='.repeat(60));
+  
+  if (result.trades.length === 0) {
+    console.log('❌ Сделок не было');
+  } else {
+    let currentProfit = 0;
+    for (let i = 0; i < result.trades.length; i++) {
+      const trade = result.trades[i];
+      const dateStr = trade.date.toLocaleDateString('ru-RU');
+      const timeStr = trade.date.toLocaleTimeString('ru-RU');
+      
+      if (trade.type === 'BUY') {
+        console.log(`${i + 1}. 🟢 ПОКУПКА | ${dateStr} ${timeStr}`);
+        console.log(`   Количество: ${trade.quantity} шт.`);
+        console.log(`   Цена: ${trade.price.toFixed(2)} руб.`);
+        console.log(`   Сумма: ${trade.amount.toFixed(2)} руб. (с комиссией)`);
+        console.log(`   Сигнал: ${trade.signal}`);
+        console.log(`   Баланс после покупки: ${trade.balance.toFixed(2)} руб.`);
+      } else {
+        currentProfit += trade.profit || 0;
+        const profitIcon = (trade.profit || 0) > 0 ? '📈' : '📉';
+        console.log(`${i + 1}. 🔴 ПРОДАЖА | ${dateStr} ${timeStr}`);
+        console.log(`   Количество: ${trade.quantity} шт.`);
+        console.log(`   Цена: ${trade.price.toFixed(2)} руб.`);
+        console.log(`   Сумма: ${trade.amount.toFixed(2)} руб. (после комиссии)`);
+        console.log(`   Сигнал: ${trade.signal}`);
+        console.log(`   ${profitIcon} Прибыль/убыток: ${(trade.profit || 0).toFixed(2)} руб.`);
+        console.log(`   Накопленная прибыль: ${currentProfit.toFixed(2)} руб.`);
+        console.log(`   Баланс после продажи: ${trade.balance.toFixed(2)} руб.`);
+      }
+      console.log('');
+    }
+  }
+  
+  // Проверяем наличие незакрытых позиций
+  const lastCandle = result.trades.length > 0 ? result.trades[result.trades.length - 1] : null;
+  if (lastCandle && result.trades.filter(t => t.type === 'BUY').length > result.trades.filter(t => t.type === 'SELL').length) {
+    console.log(`⚠️  ВНИМАНИЕ: Остались незакрытые позиции!`);
+    console.log(`   Их рыночная стоимость учтена в итоговом балансе.`);
+    console.log('');
   }
   
   if (result.totalProfit > 0) {
