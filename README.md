@@ -259,10 +259,15 @@ npm run telegram:chat-id
 
 ### 📈 **Бэктестинг стратегий:**
 ```bash
-# Бэктест для конкретного инструмента (21 день)
+# Бэктест для конкретного инструмента 
 npx tsx scripts/run-backtest.ts SBER   # Тест Сбербанка
+npm run backtest SBER
+
 npx tsx scripts/run-backtest.ts GAZP   # Тест Газпрома
+npm run backtest GAZP
+
 npx tsx scripts/run-backtest.ts YNDX   # Тест Яндекса
+npm run backtest YNDX
 
 # Показать список доступных инструментов
 npx tsx scripts/run-backtest.ts
