@@ -4,12 +4,14 @@
  */
 
 import { CandleInterval } from 'tinkoff-invest-api/dist/generated/marketdata.js';
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const MGNT_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.MGNT.figi,
+  figi: 'BBG004RVFCY3',
+  name: 'Магнит',
+  ticker: 'MGNT',
+  sector: 'Ритейл',
   orderLots: 3,
   interval: CandleInterval.CANDLE_INTERVAL_5_MIN,
   signals: {
@@ -23,10 +25,10 @@ export const MGNT_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + моментум
-    buySignal: '(sma || ema) && (rsi || macd)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.rsi() || signals.macd()),
     
     // Продажа: прибыль или разворот тренда
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'Магнит: упрощенная стратегия для ритейла'
   }

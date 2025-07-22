@@ -4,7 +4,7 @@
  */
 
 import { CandleInterval } from 'tinkoff-invest-api/dist/generated/marketdata.js';
-import { BaseInstrumentConfig } from './instruments/base-config.js';
+import { BaseInstrumentConfig, InstrumentInfo } from './instruments/base-config.js';
 import { 
   ROSN_CONFIG, TATN_CONFIG, GAZP_CONFIG, LKOH_CONFIG, NVTK_CONFIG,
   SBER_CONFIG, VTBR_CONFIG, SVCB_CONFIG,
@@ -18,11 +18,8 @@ import {
   AFLT_CONFIG
 } from './instruments/index.js';
 
-// Экспорт всех типов из новой структуры
+// Экспорт базовой конфигурации
 export {
-  BaseInstrumentConfig,
-  InstrumentSignals,
-  TradingTriggers,
   DEFAULT_BASE_CONFIG
 } from './instruments/base-config.js';
 
@@ -93,9 +90,7 @@ export const INSTRUMENT_CONFIGS: Record<string, BaseInstrumentConfig> =
 /**
  * Совместимость со старым интерфейсом Strategy
  */
-export interface StrategyConfig {
-  /** ID инструмента */
-  figi: string;
+export interface StrategyConfig extends InstrumentInfo {
   /** Активен ли инструмент для торговли */
   enabled: boolean;
   /** Кол-во лотов в заявке на покупку */
@@ -115,6 +110,9 @@ export interface StrategyConfig {
 export function convertToStrategyConfig(config: BaseInstrumentConfig): StrategyConfig {
   return {
     figi: config.figi,
+    name: config.name,
+    ticker: config.ticker,
+    sector: config.sector,
     enabled: config.enabled,
     orderLots: config.orderLots,
     brokerFee: config.brokerFee,

@@ -3,12 +3,14 @@
  * Сектор: Металлургия
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const RUAL_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.RUAL.figi,
+  figi: 'BBG008F2T3T2',
+  name: 'РУСАЛ',
+  ticker: 'RUAL',
+  sector: 'Металлургия',
   orderLots: 3, 
   signals: {
     profit: { takeProfit: 4, stopLoss: 4 }, 
@@ -24,10 +26,10 @@ export const RUAL_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + подтверждение
-    buySignal: '(sma || ema) && (supertrend || macd) && (rsi || williams)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.supertrend() || signals.macd()) && (signals.rsi() || signals.williams()),
     
     // Продажа: прибыль или разворот тренда
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'РУСАЛ: упрощенная стратегия для алюминиевого гиганта'
   }

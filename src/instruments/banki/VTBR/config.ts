@@ -3,12 +3,14 @@
  * Сектор: Банки
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const VTBR_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.VTBR.figi,
+  figi: 'BBG004730ZJ9',
+  name: 'ВТБ',
+  ticker: 'VTBR',
+  sector: 'Банки',
   orderLots: 10, 
   signals: {
     profit: { takeProfit: 3, stopLoss: 4 }, 
@@ -22,10 +24,10 @@ export const VTBR_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: любой тренд + любой осциллятор
-    buySignal: '(sma || ema) && (ao || ac || rsi)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.ao() || signals.ac() || signals.rsi()),
     
     // Продажа: прибыль или два индикатора против
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'ВТБ: агрессивная стратегия с быстрыми сигналами, ориентация на краткосрочные движения ' +
       'и защита от отката'

@@ -4,12 +4,14 @@
  * Статус: Лидер производства фосфорных удобрений, экспортоориентированный
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const PHOR_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.PHOR.figi,
+  figi: 'BBG004S689R0',
+  name: 'ФосАгро',
+  ticker: 'PHOR',
+  sector: 'Удобрения',
   enabled: true,
   orderLots: 1,
   signals: {
@@ -23,10 +25,10 @@ export const PHOR_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: любой из трендовых + осциллятор
-    buySignal: '(sma || ema || macd) && (rsi || bollinger)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema() || signals.macd()) && (signals.rsi() || signals.bollinger()),
     
     // Продажа: прибыль или все трендовые против
-    sellSignal: 'profit || (sma && ema && macd)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema() && signals.macd()),
     
     description: 'ФосАгро: реалистичные условия для агросектора'
   }

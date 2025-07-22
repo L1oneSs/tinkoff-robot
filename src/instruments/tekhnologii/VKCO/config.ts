@@ -4,12 +4,14 @@
  *
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const VKCO_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.VKCO.figi,
+  figi: 'TCS00A106YF0',
+  name: 'VK Company',
+  ticker: 'VKCO',
+  sector: 'Технологии',
   enabled: true,
   orderLots: 1,
   
@@ -54,8 +56,8 @@ export const VKCO_CONFIG: BaseInstrumentConfig = {
   },
   
   triggers: {
-    buySignal: 'profit && (sma && ema) && (macd || bollinger) && adx',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && !adx)',
+    buySignal: (signals: SignalContext) => signals.profit() && (signals.sma() && signals.ema()) && (signals.macd() || signals.bollinger()) && signals.adx(),
+    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && !signals.adx()),
     description: 'Стратегия для VK Company с учетом экосистемного потенциала и долговых рисков'
   }
 };

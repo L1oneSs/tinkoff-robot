@@ -3,12 +3,14 @@
  *
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const SVCB_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.SVCB.figi,
+  figi: 'TCS00A0ZZAC4',
+  name: 'Совкомбанк',
+  ticker: 'SVCB',
+  sector: 'Банки',
   orderLots: 1, 
   
   signals: {
@@ -52,8 +54,8 @@ export const SVCB_CONFIG: BaseInstrumentConfig = {
   },
   
   triggers: {
-    buySignal: 'profit && sma && (ema || macd) && bollinger',
-    sellSignal: 'profit || !sma || (rsi && !macd)',
+    buySignal: (signals: SignalContext) => signals.profit() && signals.sma() && (signals.ema() || signals.macd()) && signals.bollinger(),
+    sellSignal: (signals: SignalContext) => signals.profit() || !signals.sma() || (signals.rsi() && !signals.macd()),
     description: 'Консервативная стратегия для Совкомбанка с акцентом на управление рисками'
   }
 };

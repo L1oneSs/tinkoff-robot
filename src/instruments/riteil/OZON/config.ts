@@ -4,12 +4,14 @@
  * Статус: Лидер российского e-commerce, быстрорастущая экосистема
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const OZON_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.OZON.figi,
+  figi: 'BBG00Y91R9T3',
+  name: 'Озон',
+  ticker: 'OZON',
+  sector: 'Ритейл',
   enabled: true,
   orderLots: 1,
   signals: {
@@ -24,10 +26,10 @@ export const OZON_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: базовый тренд + любой подтверждающий сигнал
-    buySignal: '(sma || ema) && (macd || rsi)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.macd() || signals.rsi()),
     
     // Продажа: прибыль или два против
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'OZON: упрощенная стратегия для высоковолатильной бумаги'
   }

@@ -4,12 +4,14 @@
  * Статус: Крупнейший экспортер электроэнергии России
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const IRAO_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.IRAO.figi,
+  figi: 'BBG004S68473',
+  name: 'Интер РАО',
+  ticker: 'IRAO',
+  sector: 'Энергетика',
   enabled: true,
   orderLots: 20,
   signals: {
@@ -22,8 +24,8 @@ export const IRAO_CONFIG: BaseInstrumentConfig = {
     adx: { period: 14, trendStrengthLevel: 22, strongTrendLevel: 38 }
   },
   triggers: {
-    buySignal: '(sma && ema && macd) && (adx || bollinger) && !rsi',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && !macd) || (!adx && !bollinger)',
+    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.macd()) && (signals.adx() || signals.bollinger()) && !signals.rsi(),
+    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && !signals.macd()) || (!signals.adx() && !signals.bollinger()),
     description: 'Энергетический экспортер с диверсифицированным портфелем генерации'
   }
 };

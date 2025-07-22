@@ -70,27 +70,44 @@ export interface StrategyConfig {
   };
 }
 
+// Интерфейс для базового сигнала
+interface BaseSignal {
+  calc(params: { candles: any[], profit: number }): 'buy' | 'sell' | null;
+  minCandlesCount: number;
+}
+
+// Реестр сигналов для автоматического управления
+interface SignalRegistry {
+  [key: string]: {
+    instance?: BaseSignal;
+    signalClass: any;
+    configKey: string;
+  };
+}
+
 export class Strategy extends RobotModule {
   instrument: FigiInstrument;
   currentProfit = 0;
 
-  // Используемые сигналы - все возможные типы
-  profitSignal?: ProfitLossSignal;
-  smaSignal?: SmaCrossoverSignal;
-  rsiSignal?: RsiCrossoverSignal;
-  bollingerSignal?: BollingerBandsSignal;
-  macdSignal?: MacdSignal;
-  emaSignal?: EmaCrossoverSignal;
-  acSignal?: AcSignal;
-  aoSignal?: AoSignal;
-  cciSignal?: CciSignal;
-  stochasticSignal?: StochasticSignal;
-  williamsSignal?: WilliamsRSignal;
-  adxSignal?: AdxSignal;
-  psarSignal?: PSARSignal;
-  supertrendSignal?: SuperTrendSignal;
-  moveSignal?: MoveSignal;
-  rocSignal?: RocSignal;
+  // Реестр всех возможных сигналов
+  private signalRegistry: SignalRegistry = {
+    profit: { signalClass: ProfitLossSignal, configKey: 'profit' },
+    sma: { signalClass: SmaCrossoverSignal, configKey: 'sma' },
+    rsi: { signalClass: RsiCrossoverSignal, configKey: 'rsi' },
+    bollinger: { signalClass: BollingerBandsSignal, configKey: 'bollinger' },
+    macd: { signalClass: MacdSignal, configKey: 'macd' },
+    ema: { signalClass: EmaCrossoverSignal, configKey: 'ema' },
+    ac: { signalClass: AcSignal, configKey: 'ac' },
+    ao: { signalClass: AoSignal, configKey: 'ao' },
+    cci: { signalClass: CciSignal, configKey: 'cci' },
+    stochastic: { signalClass: StochasticSignal, configKey: 'stochastic' },
+    williams: { signalClass: WilliamsRSignal, configKey: 'williams' },
+    adx: { signalClass: AdxSignal, configKey: 'adx' },
+    psar: { signalClass: PSARSignal, configKey: 'psar' },
+    supertrend: { signalClass: SuperTrendSignal, configKey: 'supertrend' },
+    move: { signalClass: MoveSignal, configKey: 'move' },
+    roc: { signalClass: RocSignal, configKey: 'roc' }
+  };
 
   constructor(robot: Robot, public config: StrategyConfig) {
     super(robot);
@@ -106,39 +123,16 @@ export class Strategy extends RobotModule {
     const signals = this.config.signals;
     if (!signals) return;
 
-    this.initializePrimarySignals(signals);
-    this.initializeOscillators(signals);
-    this.initializeTrendSignals(signals);
-    this.initializeMomentumSignals(signals);
+    // Автоматическая инициализация всех сигналов через реестр
+    Object.entries(this.signalRegistry).forEach(([signalName, signalInfo]) => {
+      const config = (signals as any)[signalInfo.configKey];
+      if (config) {
+        signalInfo.instance = new signalInfo.signalClass(this, config);
+      }
+    });
   }
 
-  private initializePrimarySignals(signals: any) {
-    if (signals.profit) this.profitSignal = new ProfitLossSignal(this, signals.profit);
-    if (signals.sma) this.smaSignal = new SmaCrossoverSignal(this, signals.sma);
-    if (signals.rsi) this.rsiSignal = new RsiCrossoverSignal(this, signals.rsi);
-    if (signals.bollinger) this.bollingerSignal = new BollingerBandsSignal(this, signals.bollinger);
-    if (signals.macd) this.macdSignal = new MacdSignal(this, signals.macd);
-    if (signals.ema) this.emaSignal = new EmaCrossoverSignal(this, signals.ema);
-  }
 
-  private initializeOscillators(signals: any) {
-    if (signals.ac) this.acSignal = new AcSignal(this, signals.ac);
-    if (signals.ao) this.aoSignal = new AoSignal(this, signals.ao);
-    if (signals.cci) this.cciSignal = new CciSignal(this, signals.cci);
-    if (signals.stochastic) this.stochasticSignal = new StochasticSignal(this, signals.stochastic);
-    if (signals.williams) this.williamsSignal = new WilliamsRSignal(this, signals.williams);
-  }
-
-  private initializeTrendSignals(signals: any) {
-    if (signals.adx) this.adxSignal = new AdxSignal(this, signals.adx);
-    if (signals.psar) this.psarSignal = new PSARSignal(this, signals.psar);
-    if (signals.supertrend) this.supertrendSignal = new SuperTrendSignal(this, signals.supertrend);
-  }
-
-  private initializeMomentumSignals(signals: any) {
-    if (signals.move) this.moveSignal = new MoveSignal(this, signals.move);
-    if (signals.roc) this.rocSignal = new RocSignal(this, signals.roc);
-  }
 
   /**
    * Входная точка: запуск стратегии.
@@ -175,80 +169,54 @@ export class Strategy extends RobotModule {
 
   /**
    * Расчет сигнала к покупке или продаже.
-   * Использует новую логику триггеров.
+   * Использует новую логику функций-триггеров.
    */
   protected calcSignal() {
-    // Проверяем, использует ли стратегия новые триггеры
+    // Проверяем, использует ли стратегия новые функции-триггеры
     const newConfig = this.getNewConfig();
     if (newConfig?.triggers?.buySignal || newConfig?.triggers?.sellSignal) {
-      // Используем новую логику триггеров
-      if (this.shouldBuyWithTriggers()) return 'buy';
-      if (this.shouldSellWithTriggers()) return 'sell';
+      // Создаем контекст с функциями сигналов
+      const signalContext = this.createSignalContext();
+      
+      // Проверяем сигналы покупки и продажи
+      try {
+        if (newConfig.triggers.sellSignal?.(signalContext)) return 'sell';
+        if (newConfig.triggers.buySignal?.(signalContext)) return 'buy';
+      } catch (error) {
+        this.logger.error('Ошибка выполнения триггера:', error);
+      }
+      
       return null;
     }
     
-    // Fallback на старую логику для инструментов без триггеров
-    const signalParams = { candles: this.instrument.candles, profit: this.currentProfit };
-    const signals = this.calculateAllSignals(signalParams);
-    this.logSignals(signals);
-    return this.prioritizeSignals(signals);
+    // Если нет новых триггеров, возвращаем null (нет сигнала)
+    return null;
   }
 
-  private calculateAllSignals(signalParams: any) {
-    return {
-      profit: this.profitSignal?.calc(signalParams),
-      sma: this.smaSignal?.calc(signalParams),
-      rsi: this.rsiSignal?.calc(signalParams),
-      bollinger: this.bollingerSignal?.calc(signalParams),
-      macd: this.macdSignal?.calc(signalParams),
-      ema: this.emaSignal?.calc(signalParams),
-      ac: this.acSignal?.calc(signalParams),
-      ao: this.aoSignal?.calc(signalParams),
-      cci: this.cciSignal?.calc(signalParams),
-      stochastic: this.stochasticSignal?.calc(signalParams),
-      williams: this.williamsSignal?.calc(signalParams),
-      adx: this.adxSignal?.calc(signalParams),
-      psar: this.psarSignal?.calc(signalParams),
-      supertrend: this.supertrendSignal?.calc(signalParams),
-      move: this.moveSignal?.calc(signalParams),
-      roc: this.rocSignal?.calc(signalParams),
+  /**
+   * Создать контекст с функциями сигналов
+   */
+  private createSignalContext(): import('./instruments/base-config.js').SignalContext {
+    const signalParams = {
+      candles: this.instrument.candles,
+      profit: this.currentProfit
     };
-  }
 
-  private prioritizeSignals(signals: Record<string, any>) {
-    // 1. Управление рисками (самый важный)
-    if (signals.profit) return signals.profit;
+    // Автоматически создаем контекст через реестр
+    const context: any = {};
     
-    // 2. Трендовые индикаторы
-    const trendSignal = this.getTrendSignal(signals);
-    if (trendSignal) return trendSignal;
-    
-    // 3. Осцилляторы
-    const oscillatorSignal = this.getOscillatorSignal(signals);
-    if (oscillatorSignal) return oscillatorSignal;
-    
-    // 4. Скользящие средние
-    const movingAverageSignal = this.getMovingAverageSignal(signals);
-    if (movingAverageSignal) return movingAverageSignal;
-    
-    // 5. Остальные сигналы
-    return this.getOtherSignals(signals);
-  }
+    Object.entries(this.signalRegistry).forEach(([signalName, signalInfo]) => {
+      context[signalName] = () => {
+        if (!signalInfo.instance) return false;
+        
+        const result = signalInfo.instance.calc(signalParams);
+        
+        // Для profit сигнала проверяем 'sell', для остальных - 'buy'
+        return signalName === 'profit' ? result === 'sell' : result === 'buy';
+      };
+    });
 
-  private getTrendSignal(signals: Record<string, any>) {
-    return signals.adx || signals.supertrend || signals.psar;
-  }
-
-  private getOscillatorSignal(signals: Record<string, any>) {
-    return signals.rsi || signals.stochastic || signals.williams || signals.cci;
-  }
-
-  private getMovingAverageSignal(signals: Record<string, any>) {
-    return signals.sma || signals.ema || signals.macd;
-  }
-
-  private getOtherSignals(signals: Record<string, any>) {
-    return signals.ac || signals.ao || signals.move || signals.roc || signals.bollinger;
+    return context;
   }
 
   /**
@@ -351,23 +319,11 @@ export class Strategy extends RobotModule {
    * Расчет необходимого кол-ва свечей, чтобы хватило всем сигналам.
    */
   protected calcRequiredCandlesCount() {
-    const signals = [
-      this.profitSignal, this.smaSignal, this.rsiSignal, this.bollingerSignal,
-      this.macdSignal, this.emaSignal, this.acSignal, this.aoSignal,
-      this.cciSignal, this.stochasticSignal, this.williamsSignal, this.adxSignal,
-      this.psarSignal, this.supertrendSignal, this.moveSignal, this.rocSignal,
-    ];
-    
-    const minCounts = signals
-      .filter(signal => signal !== undefined)
-      .map(signal => signal!.minCandlesCount);
+    const minCounts = Object.values(this.signalRegistry)
+      .filter(signalInfo => signalInfo.instance)
+      .map(signalInfo => signalInfo.instance!.minCandlesCount);
     
     return minCounts.length > 0 ? Math.max(...minCounts) : 0;
-  }
-
-  protected logSignals(signals: Record<string, unknown>) {
-    const time = this.instrument.candles[this.instrument.candles.length - 1].time?.toLocaleString();
-    this.logger.warn(`Сигналы: ${Object.keys(signals).map(k => `${k}=${signals[k] || 'wait'}`).join(', ')} (${time})`);
   }
 
   /**
@@ -377,112 +333,8 @@ export class Strategy extends RobotModule {
   /**
    * Получить новую конфигурацию с триггерами
    */
-  getNewConfig() {
+  private getNewConfig() {
     return getNewInstrumentConfig(this.config.figi);
-  }
-
-  /**
-   * Проверить сигнал покупки по новым триггерам
-   */
-  shouldBuyWithTriggers(): boolean {
-    const newConfig = this.getNewConfig();
-    if (!newConfig?.triggers?.buySignal) return false;
-
-    const signalStates = this.getSignalStates();
-    return this.evaluateTriggers(newConfig.triggers.buySignal, signalStates);
-  }
-
-  /**
-   * Проверить сигнал продажи по новым триггерам
-   */
-  shouldSellWithTriggers(): boolean {
-    const newConfig = this.getNewConfig();
-    if (!newConfig?.triggers?.sellSignal) return false;
-
-    const signalStates = this.getSignalStates();
-    return this.evaluateTriggers(newConfig.triggers.sellSignal, signalStates);
-  }
-
-  /**
-   * Получить состояния всех сигналов
-   */
-  private getSignalStates(): Record<string, boolean> {
-    const states: Record<string, boolean> = {};
-    const signalParams = {
-      candles: this.instrument.candles,
-      profit: this.currentProfit
-    };
-
-    // Основные сигналы
-    this.addBasicSignalStates(states, signalParams);
-    
-    // Осцилляторы
-    this.addOscillatorSignalStates(states, signalParams);
-    
-    // Трендовые сигналы
-    this.addTrendSignalStates(states, signalParams);
-    
-    // Импульсные сигналы
-    this.addMomentumSignalStates(states, signalParams);
-
-    return states;
-  }
-
-  private addBasicSignalStates(states: Record<string, boolean>, signalParams: any) {
-    if (this.profitSignal) states.profit = this.profitSignal.calc(signalParams) === 'sell';
-    if (this.smaSignal) states.sma = this.smaSignal.calc(signalParams) === 'buy';
-    if (this.rsiSignal) states.rsi = this.rsiSignal.calc(signalParams) === 'buy';
-    if (this.bollingerSignal) states.bollinger = this.bollingerSignal.calc(signalParams) === 'buy';
-    if (this.macdSignal) states.macd = this.macdSignal.calc(signalParams) === 'buy';
-    if (this.emaSignal) states.ema = this.emaSignal.calc(signalParams) === 'buy';
-  }
-
-  private addOscillatorSignalStates(states: Record<string, boolean>, signalParams: any) {
-    if (this.acSignal) states.ac = this.acSignal.calc(signalParams) === 'buy';
-    if (this.aoSignal) states.ao = this.aoSignal.calc(signalParams) === 'buy';
-    if (this.cciSignal) states.cci = this.cciSignal.calc(signalParams) === 'buy';
-    if (this.stochasticSignal) states.stochastic = this.stochasticSignal.calc(signalParams) === 'buy';
-    if (this.williamsSignal) states.williams = this.williamsSignal.calc(signalParams) === 'buy';
-  }
-
-  private addTrendSignalStates(states: Record<string, boolean>, signalParams: any) {
-    if (this.adxSignal) states.adx = this.adxSignal.calc(signalParams) === 'buy';
-    if (this.psarSignal) states.psar = this.psarSignal.calc(signalParams) === 'buy';
-    if (this.supertrendSignal) states.supertrend = this.supertrendSignal.calc(signalParams) === 'buy';
-  }
-
-  private addMomentumSignalStates(states: Record<string, boolean>, signalParams: any) {
-    if (this.moveSignal) states.move = this.moveSignal.calc(signalParams) === 'buy';
-    if (this.rocSignal) states.roc = this.rocSignal.calc(signalParams) === 'buy';
-  }
-
-  /**
-   * Вычисление логических выражений триггеров
-   */
-  private evaluateTriggers(expression: string, signals: Record<string, boolean>): boolean {
-    try {
-      // Замещаем названия сигналов на их значения
-      let processedExpression = expression;
-      
-      for (const [signalName, value] of Object.entries(signals)) {
-        const regex = new RegExp(`\\b${signalName}\\b`, 'g');
-        processedExpression = processedExpression.replace(regex, value.toString());
-      }
-      
-      // Заменяем логические операторы на JavaScript операторы
-      processedExpression = processedExpression
-        .replace(/&&/g, ' && ')
-        .replace(/\|\|/g, ' || ')
-        .replace(/!/g, '!')
-        .replace(/\(/g, '(')
-        .replace(/\)/g, ')');
-      
-      // Выполняем выражение
-      return eval(processedExpression);
-    } catch (error) {
-      this.logger.error(`Ошибка в выражении триггера: ${expression}`, error);
-      return false;
-    }
   }
 
   /**
@@ -533,12 +385,16 @@ export class Strategy extends RobotModule {
    * Получить список активных сигналов
    */
   private getActiveSignals(): string[] {
-    // Используем уже вычисленные состояния сигналов для консистентности
-    const signalStates = this.getSignalStates();
+    const signalParams = { candles: this.instrument.candles, profit: this.currentProfit };
     const signals: string[] = [];
     
-    // Добавляем все активные сигналы на основе их состояний
-    Object.entries(signalStates).forEach(([signalName, isActive]) => {
+    // Автоматически проверяем все сигналы через реестр
+    Object.entries(this.signalRegistry).forEach(([signalName, signalInfo]) => {
+      if (!signalInfo.instance) return;
+      
+      const result = signalInfo.instance.calc(signalParams);
+      const isActive = signalName === 'profit' ? result === 'sell' : result === 'buy';
+      
       if (isActive) {
         signals.push(signalName);
       }

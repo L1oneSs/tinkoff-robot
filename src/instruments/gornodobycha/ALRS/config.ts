@@ -4,12 +4,14 @@
  * Статус: Мировой лидер алмазодобычи, монополист российского рынка
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const ALRS_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.ALRS.figi,
+  figi: 'BBG004S68B31',
+  name: 'АЛРОСА',
+  ticker: 'ALRS',
+  sector: 'Горнодобыча',
   enabled: true,
   orderLots: 3,
   signals: {
@@ -22,8 +24,8 @@ export const ALRS_CONFIG: BaseInstrumentConfig = {
     williams: { period: 14, overboughtLevel: -20, oversoldLevel: -80 }
   },
   triggers: {
-    buySignal: '(sma && ema && macd) && (bollinger || !williams) && !rsi',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && williams) || !macd',
+    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.macd()) && (signals.bollinger() || !signals.williams()) && !signals.rsi(),
+    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && signals.williams()) || !signals.macd(),
     description: 'Алмазный монополист с премиальным позиционированием'
   }
 };

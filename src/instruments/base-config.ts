@@ -22,7 +22,40 @@ import {
   RocSignalConfig
 } from '../signals/self-trading-indicators/index.js';
 
+/**
+ * Информация об инструменте
+ */
+export interface InstrumentInfo {
+  /** FIGI инструмента */
+  figi: string;
+  /** Название инструмента */
+  name: string;
+  /** Тикер */
+  ticker: string;
+  /** Сектор экономики */
+  sector: string;
+}
+
 export type SignalResult = 'buy' | 'sell' | void;
+
+export interface SignalContext {
+  profit: () => boolean;
+  sma: () => boolean;
+  ema: () => boolean;
+  rsi: () => boolean;
+  bollinger: () => boolean;
+  macd: () => boolean;
+  williams: () => boolean;
+  ac: () => boolean;
+  ao: () => boolean;
+  cci: () => boolean;
+  stochastic: () => boolean;
+  adx: () => boolean;
+  psar: () => boolean;
+  supertrend: () => boolean;
+  move: () => boolean;
+  roc: () => boolean;
+}
 
 export interface InstrumentSignals {
   profit?: ProfitLossSignalConfig;
@@ -44,17 +77,15 @@ export interface InstrumentSignals {
 }
 
 export interface TradingTriggers {
-  /** Условие покупки (например: "profit && (sma || ema)") */
-  buySignal: string;
-  /** Условие продажи (например: "profit || (macd && bollinger)") */
-  sellSignal: string;
+  /** Функция покупки */
+  buySignal: (signals: SignalContext) => boolean;
+  /** Функция продажи */
+  sellSignal: (signals: SignalContext) => boolean;
   /** Описание стратегии */
   description?: string;
 }
 
-export interface BaseInstrumentConfig {
-  /** ID инструмента */
-  figi: string;
+export interface BaseInstrumentConfig extends InstrumentInfo {
   /** Активен ли инструмент для торговли */
   enabled: boolean;
   /** Кол-во лотов в заявке */
@@ -70,9 +101,9 @@ export interface BaseInstrumentConfig {
 }
 
 /**
- * Базовая конфигурация по умолчанию
+ * Базовая конфигурация без данных об инструменте
  */
-export const DEFAULT_BASE_CONFIG: Omit<BaseInstrumentConfig, 'figi'> = {
+export const DEFAULT_BASE_CONFIG: Omit<BaseInstrumentConfig, 'figi' | 'name' | 'ticker' | 'sector'> = {
   enabled: true,
   orderLots: 1,
   brokerFee: 0.3,
@@ -84,8 +115,8 @@ export const DEFAULT_BASE_CONFIG: Omit<BaseInstrumentConfig, 'figi'> = {
     }
   },
   triggers: {
-    buySignal: 'profit',
-    sellSignal: 'profit',
+    buySignal: (signals: SignalContext) => signals.profit(),
+    sellSignal: (signals: SignalContext) => signals.profit(),
     description: 'Базовая стратегия только на управлении рисками'
   }
 };

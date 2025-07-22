@@ -3,12 +3,14 @@
  *
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const WUSH_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.WUSH.figi,
+  figi: 'TCS00A105EX7',
+  name: 'Whoosh',
+  ticker: 'WUSH',
+  sector: 'Технологии',
   enabled: true,
   orderLots: 1,
   
@@ -48,8 +50,8 @@ export const WUSH_CONFIG: BaseInstrumentConfig = {
   },
   
   triggers: {
-    buySignal: 'profit && (rsi || (macd && ema)) && adx',
-    sellSignal: 'profit || (rsi && bollinger) || !adx',
+    buySignal: (signals: SignalContext) => signals.profit() && (signals.rsi() || (signals.macd() && signals.ema())) && signals.adx(),
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.rsi() && signals.bollinger()) || !signals.adx(),
     description: 'Стратегия для технологической акции Whoosh с акцентом на рост и управление рисками'
   }
 };

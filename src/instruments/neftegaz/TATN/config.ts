@@ -3,12 +3,14 @@
  * Сектор: Нефтегаз
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const TATN_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.TATN.figi,
+  figi: 'BBG004S68829',
+  name: 'Татнефть',
+  ticker: 'TATN',
+  sector: 'Нефтегаз',
   orderLots: 2, 
   signals: {
     profit: { takeProfit: 4, stopLoss: 4 },
@@ -23,10 +25,10 @@ export const TATN_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + любой осциллятор
-    buySignal: '(sma || ema) && (rsi || williams || adx)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.rsi() || signals.williams() || signals.adx()),
     
     // Продажа: прибыль или разворот тренда
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'Татнефть: упрощенная стратегия для дивидендной нефтянки'
   }

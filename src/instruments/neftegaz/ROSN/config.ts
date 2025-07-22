@@ -4,12 +4,14 @@
  * 
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const ROSN_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.ROSN.figi,
+  figi: 'BBG004731354',
+  name: 'Роснефть',
+  ticker: 'ROSN',
+  sector: 'Нефтегаз',
   orderLots: 2, 
   signals: {
     profit: { takeProfit: 4, stopLoss: 4 },
@@ -28,10 +30,10 @@ export const ROSN_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: базовый тренд + подтверждение
-    buySignal: '(sma || ema) && (macd || adx) && (rsi || williams)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.macd() || signals.adx()) && (signals.rsi() || signals.williams()),
     
     // Продажа: прибыль или разворот тренда
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'Роснефть: упрощенная стратегия для нефтяного лидера'
   }

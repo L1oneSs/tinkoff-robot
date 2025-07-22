@@ -4,12 +4,14 @@
  * Статус: Трансформация в лидера AI-облачных решений
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const YNDX_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.YNDX.figi,
+  figi: 'BBG006L8G4H1',
+  name: 'Яндекс',
+  ticker: 'YNDX',
+  sector: 'Технологии',
   orderLots: 1,
   signals: {
     profit: { takeProfit: 3, stopLoss: 4 },
@@ -24,10 +26,10 @@ export const YNDX_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: простой тренд + подтверждение
-    buySignal: '(sma || ema) && (rsi || macd)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.rsi() || signals.macd()),
     
     // Продажа: прибыль или разворот тренда  
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'Яндекс: упрощенная стратегия для волатильной IT-бумаги'
   }

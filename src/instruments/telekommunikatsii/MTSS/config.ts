@@ -4,12 +4,14 @@
  * Статус: Лидер телеком-рынка с диверсификацией в IT и финтех
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const MTSS_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.MTSS.figi,
+  figi: 'BBG004S681W1',
+  name: 'МТС',
+  ticker: 'MTSS',
+  sector: 'Телекоммуникации',
   orderLots: 2,
   signals: {
     profit: { takeProfit: 3, stopLoss: 4 },
@@ -23,10 +25,10 @@ export const MTSS_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + любое подтверждение
-    buySignal: '(sma || ema) && (macd || rsi)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.macd() || signals.rsi()),
     
     // Продажа: прибыль или разворот тренда
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'МТС: упрощенная стратегия для телеком-лидера'
   }

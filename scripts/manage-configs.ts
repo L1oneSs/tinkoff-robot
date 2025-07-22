@@ -7,7 +7,6 @@ import {
   INSTRUMENT_CONFIGS, 
   getActiveInstrumentConfigs
 } from '../src/instrument-configs.js';
-import { INSTRUMENTS, getInstrumentByFigi } from '../src/instruments.js';
 
 /**
  * Показать информацию о всех инструментах
@@ -16,12 +15,11 @@ function showAllInstruments() {
   console.log('🔍 === ОБЗОР ВСЕХ ИНСТРУМЕНТОВ ===\n');
   
   Object.values(INSTRUMENT_CONFIGS).forEach(config => {
-    const instrument = getInstrumentByFigi(config.figi);
     const status = config.enabled ? '✅ АКТИВЕН' : '❌ ОТКЛЮЧЕН';
     const signalsCount = config.signals ? Object.keys(config.signals).length : 0;
     
-    console.log(`${status} ${instrument?.ticker} (${instrument?.name})`);
-    console.log(`   Сектор: ${instrument?.sector}`);
+    console.log(`${status} ${config.ticker} (${config.name})`);
+    console.log(`   Сектор: ${config.sector}`);
     console.log(`   Лоты: ${config.orderLots}, Комиссия: ${config.brokerFee}%`);
     console.log(`   Интервал: ${config.interval}, Сигналов: ${signalsCount}`);
     
@@ -42,11 +40,10 @@ function showActiveInstruments() {
   console.log(`Всего активных инструментов: ${active.length}\n`);
   
   active.forEach(config => {
-    const instrument = getInstrumentByFigi(config.figi);
     const signalsCount = config.signals ? Object.keys(config.signals).length : 0;
     
-    console.log(`📈 ${instrument?.ticker} - ${instrument?.name}`);
-    console.log(`   Сектор: ${instrument?.sector}`);
+    console.log(`📈 ${config.ticker} - ${config.name}`);
+    console.log(`   Сектор: ${config.sector}`);
     console.log(`   Сигналов: ${signalsCount}`);
     if (config.signals) {
       console.log(`   Типы: ${Object.keys(config.signals).join(', ')}`);
@@ -59,22 +56,16 @@ function showActiveInstruments() {
  * Показать детальную информацию об инструменте
  */
 function showInstrumentDetails(ticker: string) {
-  const instrument = INSTRUMENTS[ticker];
-  if (!instrument) {
+  const config = Object.values(INSTRUMENT_CONFIGS).find(c => c.ticker === ticker);
+  if (!config) {
     console.log(`❌ Инструмент ${ticker} не найден`);
     return;
   }
   
-  const config = INSTRUMENT_CONFIGS[instrument.figi];
-  if (!config) {
-    console.log(`❌ Конфигурация для ${ticker} не найдена`);
-    return;
-  }
-  
   console.log(`📊 === ДЕТАЛИ: ${ticker} ===\n`);
-  console.log(`Название: ${instrument.name}`);
-  console.log(`FIGI: ${instrument.figi}`);
-  console.log(`Сектор: ${instrument.sector}`);
+  console.log(`Название: ${config.name}`);
+  console.log(`FIGI: ${config.figi}`);
+  console.log(`Сектор: ${config.sector}`);
   console.log(`Статус: ${config.enabled ? '✅ Активен' : '❌ Отключен'}`);
   console.log(`Лоты: ${config.orderLots}`);
   console.log(`Комиссия: ${config.brokerFee}%`);
@@ -99,16 +90,13 @@ function showSectorStats() {
   const sectors: Record<string, { total: number; active: number; tickers: string[] }> = {};
   
   Object.values(INSTRUMENT_CONFIGS).forEach(config => {
-    const instrument = getInstrumentByFigi(config.figi);
-    if (instrument) {
-      if (!sectors[instrument.sector]) {
-        sectors[instrument.sector] = { total: 0, active: 0, tickers: [] };
-      }
-      sectors[instrument.sector].total++;
-      sectors[instrument.sector].tickers.push(instrument.ticker);
-      if (config.enabled) {
-        sectors[instrument.sector].active++;
-      }
+    if (!sectors[config.sector]) {
+      sectors[config.sector] = { total: 0, active: 0, tickers: [] };
+    }
+    sectors[config.sector].total++;
+    sectors[config.sector].tickers.push(config.ticker);
+    if (config.enabled) {
+      sectors[config.sector].active++;
     }
   });
   

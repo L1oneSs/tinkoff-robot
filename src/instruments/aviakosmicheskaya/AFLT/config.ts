@@ -3,12 +3,14 @@
  * Сектор: Авиаперевозки
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const AFLT_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.AFLT.figi,
+  figi: 'BBG004S683W7',
+  name: 'Аэрофлот',
+  ticker: 'AFLT',
+  sector: 'Авиаперевозки',
   orderLots: 1,
   signals: {
     profit: { takeProfit: 3, stopLoss: 4 }, 
@@ -21,10 +23,10 @@ export const AFLT_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: хотя бы 2 из 3 групп сигналов должны подтверждать покупку
-    buySignal: '((sma || ema) && (rsi || williams)) || ((sma || ema) && macd) || (macd && bollinger)',
+    buySignal: (signals: SignalContext) => ((signals.sma() || signals.ema()) && (signals.rsi() || signals.williams())) || ((signals.sma() || signals.ema()) && signals.macd()) || (signals.macd() && signals.bollinger()),
     
     // Продажа: только четкие сигналы на выход
-    sellSignal: 'profit || (sma && ema && macd)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema() && signals.macd()),
     
     description: 'Аэрофлот: балансированная стратегия с умеренными условиями входа и строгими условиями выхода'
   }

@@ -4,12 +4,14 @@
  * Статус: Крупнейший производитель стали в России, экспортоориентированный
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const CHMF_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.CHMF.figi,
+  figi: 'BBG00475K6C3',
+  name: 'Северсталь',
+  ticker: 'CHMF',
+  sector: 'Металлургия',
   enabled: true,
   orderLots: 1,
   signals: {
@@ -22,8 +24,8 @@ export const CHMF_CONFIG: BaseInstrumentConfig = {
     adx: { period: 14, trendStrengthLevel: 25, strongTrendLevel: 40 }
   },
   triggers: {
-    buySignal: '(sma && ema && macd) && (adx || bollinger) && !rsi',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && !macd) || (!adx && !bollinger)',
+    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.macd()) && (signals.adx() || signals.bollinger()) && !signals.rsi(),
+    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && !signals.macd()) || (!signals.adx() && !signals.bollinger()),
     description: 'Стальной гигант с циклическим ростом от инфраструктурных проектов'
   }
 };

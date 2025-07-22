@@ -3,12 +3,14 @@
  * Сектор: Металлургия
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const GMKN_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.GMKN.figi,
+  figi: 'BBG004731489',
+  name: 'ГМК Норильский никель',
+  ticker: 'GMKN',
+  sector: 'Металлургия',
   orderLots: 1,
   signals: {
     profit: { takeProfit: 4, stopLoss: 4 }, 
@@ -23,10 +25,10 @@ export const GMKN_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: базовый тренд + подтверждение силы
-    buySignal: '(sma || ema) && (adx || macd) && (rsi || williams)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.adx() || signals.macd()) && (signals.rsi() || signals.williams()),
     
     // Продажа: прибыль или разворот
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'Норникель: упрощенная стратегия для сырьевого актива'
   }

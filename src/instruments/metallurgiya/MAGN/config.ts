@@ -4,12 +4,14 @@
  * Статус: Один из лидеров российской металлургии, интегрированный производитель
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const MAGN_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.MAGN.figi,
+  figi: 'BBG004S68507',
+  name: 'ММК',
+  ticker: 'MAGN',
+  sector: 'Металлургия',
   enabled: true,
   orderLots: 5,
   signals: {
@@ -23,10 +25,10 @@ export const MAGN_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + любое подтверждение
-    buySignal: '(sma || ema) && (macd || rsi)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.macd() || signals.rsi()),
     
     // Продажа: прибыль или разворот
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'Магнитогорский МК: упрощенная стратегия для металлургии'
   }

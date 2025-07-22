@@ -3,12 +3,14 @@
  * Сектор: Нефтегаз
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const GAZP_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.GAZP.figi,
+  figi: 'BBG004730RP0',
+  name: 'Газпром',
+  ticker: 'GAZP',
+  sector: 'Нефтегаз',
   orderLots: 2, 
   signals: {
     profit: { takeProfit: 4, stopLoss: 4 }, 
@@ -24,10 +26,10 @@ export const GAZP_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: базовые условия для Газпрома
-    buySignal: '(sma || ema) && (rsi || stochastic)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.rsi() || signals.stochastic()),
     
     // Продажа: фиксация прибыли или сильный разворот
-    sellSignal: 'profit || (sma && ema && psar)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema() && signals.psar()),
     
     description: 'Газпром: крайне осторожная стратегия для компании в структурном кризисе, ' +
       'ожидание пробоя 132₽ с объемом'

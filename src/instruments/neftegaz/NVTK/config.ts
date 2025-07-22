@@ -4,12 +4,14 @@
  * Статус: №3 в мире по доказанным запасам газа, лидер СПГ-проектов в Арктике
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const NVTK_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.NVTK.figi,
+  figi: 'BBG00475KKY8',
+  name: 'НОВАТЭК',
+  ticker: 'NVTK',
+  sector: 'Нефтегаз',
   enabled: true,
   orderLots: 1,
   signals: {
@@ -24,10 +26,10 @@ export const NVTK_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + подтверждение
-    buySignal: '(sma || ema) && (adx || macd)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.adx() || signals.macd()),
     
     // Продажа: прибыль или разворот
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'НОВАТЭК: упрощенная стратегия для газового лидера'
   }

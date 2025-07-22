@@ -4,12 +4,14 @@
  *
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const LKOH_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.LKOH.figi,
+  figi: 'BBG004731032',
+  name: 'ЛУКОЙЛ',
+  ticker: 'LKOH',
+  sector: 'Нефтегаз',
   orderLots: 1, 
   signals: {
     profit: { takeProfit: 3, stopLoss: 4 },
@@ -28,10 +30,10 @@ export const LKOH_CONFIG: BaseInstrumentConfig = {
   },
   triggers: {
     // Покупка: тренд + любой осциллятор
-    buySignal: '(sma || ema) && (rsi || stochastic || adx)',
+    buySignal: (signals: SignalContext) => (signals.sma() || signals.ema()) && (signals.rsi() || signals.stochastic() || signals.adx()),
     
     // Продажа: фиксация прибыли или разворот тренда
-    sellSignal: 'profit || (sma && ema)',
+    sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
     
     description: 'ЛУКОЙЛ: упрощенная стратегия с реалистичными условиями'
   }

@@ -4,12 +4,14 @@
  * Статус: Крупнейшая гидроэнергетическая компания России
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const HYDR_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.HYDR.figi,
+  figi: 'BBG00475K2X9',
+  name: 'РусГидро',
+  ticker: 'HYDR',
+  sector: 'Энергетика',
   enabled: true,
   orderLots: 50,
   signals: {
@@ -22,8 +24,8 @@ export const HYDR_CONFIG: BaseInstrumentConfig = {
     williams: { period: 14, overboughtLevel: -20, oversoldLevel: -80 }
   },
   triggers: {
-    buySignal: '(sma && ema && macd) && (bollinger || !williams) && !rsi',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && williams) || !macd',
+    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.macd()) && (signals.bollinger() || !signals.williams()) && !signals.rsi(),
+    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && signals.williams()) || !signals.macd(),
     description: 'Зеленая энергетика с государственной поддержкой и стабильными тарифами'
   }
 };

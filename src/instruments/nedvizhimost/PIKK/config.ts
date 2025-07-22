@@ -4,12 +4,14 @@
  * Статус: Крупнейший девелопер России по объемам строительства
  */
 
-import { INSTRUMENTS } from '../../../instruments.js';
-import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG } from '../../base-config.js';
+import { BaseInstrumentConfig, DEFAULT_BASE_CONFIG, SignalContext } from '../../base-config.js';
 
 export const PIKK_CONFIG: BaseInstrumentConfig = {
   ...DEFAULT_BASE_CONFIG,
-  figi: INSTRUMENTS.PIKK.figi,
+  figi: 'BBG004S68BH6',
+  name: 'ПИК',
+  ticker: 'PIKK',
+  sector: 'Недвижимость',
   enabled: true,
   orderLots: 2,
   signals: {
@@ -23,8 +25,8 @@ export const PIKK_CONFIG: BaseInstrumentConfig = {
     stochastic: { kLength: 14, kSmoothing: 3, overboughtLevel: 80, oversoldLevel: 20 }
   },
   triggers: {
-    buySignal: '(sma && ema && adx) && (macd || bollinger) && (!rsi || !stochastic)',
-    sellSignal: 'profit || (!sma || !ema) || (rsi && stochastic) || (!macd && !adx)',
+    buySignal: (signals: SignalContext) => (signals.sma() && signals.ema() && signals.adx()) && (signals.macd() || signals.bollinger()) && (!signals.rsi() || !signals.stochastic()),
+    sellSignal: (signals: SignalContext) => signals.profit() || (!signals.sma() || !signals.ema()) || (signals.rsi() && signals.stochastic()) || (!signals.macd() && !signals.adx()),
     description: 'Девелоперский лидер с циклическим ростом от ипотечных программ'
   }
 };
