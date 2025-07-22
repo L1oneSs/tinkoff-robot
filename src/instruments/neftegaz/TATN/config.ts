@@ -27,7 +27,7 @@ export const TATN_CONFIG: BaseInstrumentConfig = {
     // Покупка: тренд + любой осциллятор
     buySignal: (signals: SignalContext) => 
       
-      (signals.sma() || signals.ema()) && (signals.rsi() || signals.williams() || signals.adx()),
+      (signals.sma() || signals.ema()) && (signals.cci() || signals.williams() || signals.adx()),
     
     // Продажа: прибыль или разворот тренда
     sellSignal: (signals: SignalContext) => signals.profit() || (signals.sma() && signals.ema()),
