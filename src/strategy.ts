@@ -36,6 +36,15 @@ import {
   MoveSignal, MoveSignalConfig,
   RocSignal, RocSignalConfig
 } from './signals/self-trading-indicators/index.js';
+// Импорт свечных паттернов
+import {
+  HammerSignal, HammerSignalConfig,
+  ShootingStarSignal, ShootingStarSignalConfig,
+  HaramiSignal, HaramiSignalConfig,
+  BullishEngulfingSignal, BullishEngulfingSignalConfig,
+  BearishEngulfingSignal, BearishEngulfingSignalConfig,
+  DojiSignal, DojiSignalConfig
+} from './signals/candlestick-patterns/index.js';
 
 export interface StrategyConfig {
   /** ID инструмента */
@@ -67,6 +76,14 @@ export interface StrategyConfig {
     supertrend?: SuperTrendSignalConfig;
     move?: MoveSignalConfig;
     roc?: RocSignalConfig;
+    
+    // Свечные паттерны
+    hammer?: HammerSignalConfig;
+    shootingStar?: ShootingStarSignalConfig;
+    harami?: HaramiSignalConfig;
+    bullishEngulfing?: BullishEngulfingSignalConfig;
+    bearishEngulfing?: BearishEngulfingSignalConfig;
+    doji?: DojiSignalConfig;
   };
 }
 
@@ -106,7 +123,15 @@ export class Strategy extends RobotModule {
     psar: { signalClass: PSARSignal, configKey: 'psar' },
     supertrend: { signalClass: SuperTrendSignal, configKey: 'supertrend' },
     move: { signalClass: MoveSignal, configKey: 'move' },
-    roc: { signalClass: RocSignal, configKey: 'roc' }
+    roc: { signalClass: RocSignal, configKey: 'roc' },
+    
+    // Свечные паттерны
+    hammer: { signalClass: HammerSignal, configKey: 'hammer' },
+    shootingStar: { signalClass: ShootingStarSignal, configKey: 'shootingStar' },
+    harami: { signalClass: HaramiSignal, configKey: 'harami' },
+    bullishEngulfing: { signalClass: BullishEngulfingSignal, configKey: 'bullishEngulfing' },
+    bearishEngulfing: { signalClass: BearishEngulfingSignal, configKey: 'bearishEngulfing' },
+    doji: { signalClass: DojiSignal, configKey: 'doji' }
   };
 
   constructor(robot: Robot, public config: StrategyConfig) {
@@ -209,8 +234,8 @@ export class Strategy extends RobotModule {
         
         const result = signalInfo.instance.calc(signalParams);
         
-        // Для profit сигнала проверяем 'sell', для остальных - 'buy'
-        return signalName === 'profit' ? result === 'sell' : result === 'buy';
+        // Возвращаем true если сигнал активен (есть результат 'buy' или 'sell')
+        return result === 'buy' || result === 'sell';
       };
     });
 
@@ -391,9 +416,9 @@ export class Strategy extends RobotModule {
       if (!signalInfo.instance) return;
       
       const result = signalInfo.instance.calc(signalParams);
-      const isActive = signalName === 'profit' ? result === 'sell' : result === 'buy';
       
-      if (isActive) {
+      // Сигнал активен, если есть результат 'buy' или 'sell'
+      if (result === 'buy' || result === 'sell') {
         signals.push(signalName);
       }
     });

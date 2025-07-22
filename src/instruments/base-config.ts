@@ -21,6 +21,15 @@ import {
   MoveSignalConfig,
   RocSignalConfig
 } from '../signals/self-trading-indicators/index.js';
+// Импорт конфигураций свечных паттернов
+import {
+  HammerSignalConfig,
+  ShootingStarSignalConfig,
+  HaramiSignalConfig,
+  BullishEngulfingSignalConfig,
+  BearishEngulfingSignalConfig,
+  DojiSignalConfig
+} from '../signals/candlestick-patterns/index.js';
 
 /**
  * Информация об инструменте
@@ -55,6 +64,14 @@ export interface SignalContext {
   supertrend: () => boolean;
   move: () => boolean;
   roc: () => boolean;
+  
+  // Свечные паттерны
+  hammer: () => boolean;
+  shootingStar: () => boolean;
+  harami: () => boolean;
+  bullishEngulfing: () => boolean;
+  bearishEngulfing: () => boolean;
+  doji: () => boolean;
 }
 
 export interface InstrumentSignals {
@@ -74,6 +91,14 @@ export interface InstrumentSignals {
   supertrend?: SuperTrendSignalConfig;
   move?: MoveSignalConfig;
   roc?: RocSignalConfig;
+  
+  // Свечные паттерны
+  hammer?: HammerSignalConfig;
+  shootingStar?: ShootingStarSignalConfig;
+  harami?: HaramiSignalConfig;
+  bullishEngulfing?: BullishEngulfingSignalConfig;
+  bearishEngulfing?: BearishEngulfingSignalConfig;
+  doji?: DojiSignalConfig;
 }
 
 export interface TradingTriggers {
