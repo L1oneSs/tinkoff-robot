@@ -41,7 +41,9 @@ import {
   HaramiSignal,
   BullishEngulfingSignal,
   BearishEngulfingSignal,
-  DojiSignal
+  DojiSignal,
+  ThreeWhiteSoldiersSignal,
+  ThreeBlackCrowsSignal
 } from '../src/signals/candlestick-patterns/index.js';
 
 // Параметры бэктеста
@@ -353,6 +355,12 @@ async function runBacktest(
   if (strategyConfig.signals?.doji) {
     signalInstances.doji = new DojiSignal(mockStrategy, strategyConfig.signals.doji);
   }
+  if (strategyConfig.signals?.threeWhiteSoldiers) {
+    signalInstances.threeWhiteSoldiers = new ThreeWhiteSoldiersSignal(mockStrategy, strategyConfig.signals.threeWhiteSoldiers);
+  }
+  if (strategyConfig.signals?.threeBlackCrows) {
+    signalInstances.threeBlackCrows = new ThreeBlackCrowsSignal(mockStrategy, strategyConfig.signals.threeBlackCrows);
+  }
   
   // Минимальное количество свечей для начала торговли (для индикаторов)
   const minCandles = 50;
@@ -440,7 +448,9 @@ async function runBacktest(
       harami: () => signalResults.harami === 'buy',
       bullishEngulfing: () => signalResults.bullishEngulfing === 'buy',
       bearishEngulfing: () => signalResults.bearishEngulfing === 'sell', // BearishEngulfing - медвежий паттерн
-      doji: () => signalResults.doji === 'buy'
+      doji: () => signalResults.doji === 'buy',
+      threeWhiteSoldiers: () => signalResults.threeWhiteSoldiers === 'buy',
+      threeBlackCrows: () => signalResults.threeBlackCrows === 'sell'
     };
     
     // Также нужен контекст для sell сигналов
@@ -468,7 +478,9 @@ async function runBacktest(
       harami: () => signalResults.harami === 'sell', 
       bullishEngulfing: () => signalResults.bullishEngulfing === 'sell',
       bearishEngulfing: () => signalResults.bearishEngulfing === 'sell',
-      doji: () => signalResults.doji === 'sell'
+      doji: () => signalResults.doji === 'sell',
+      threeWhiteSoldiers: () => signalResults.threeWhiteSoldiers === 'sell',
+      threeBlackCrows: () => signalResults.threeBlackCrows === 'sell'
     };
     
     // Получаем решение о покупке/продаже из конфигурации инструмента

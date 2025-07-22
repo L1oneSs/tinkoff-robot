@@ -28,7 +28,9 @@ import {
   HaramiSignalConfig,
   BullishEngulfingSignalConfig,
   BearishEngulfingSignalConfig,
-  DojiSignalConfig
+  DojiSignalConfig,
+  ThreeWhiteSoldiersSignalConfig,
+  ThreeBlackCrowsSignalConfig
 } from '../signals/candlestick-patterns/index.js';
 
 /**
@@ -72,6 +74,8 @@ export interface SignalContext {
   bullishEngulfing: () => boolean;
   bearishEngulfing: () => boolean;
   doji: () => boolean;
+  threeWhiteSoldiers: () => boolean;
+  threeBlackCrows: () => boolean;
 }
 
 export interface InstrumentSignals {
@@ -99,6 +103,8 @@ export interface InstrumentSignals {
   bullishEngulfing?: BullishEngulfingSignalConfig;
   bearishEngulfing?: BearishEngulfingSignalConfig;
   doji?: DojiSignalConfig;
+  threeWhiteSoldiers?: ThreeWhiteSoldiersSignalConfig;
+  threeBlackCrows?: ThreeBlackCrowsSignalConfig;
 }
 
 export interface TradingTriggers {

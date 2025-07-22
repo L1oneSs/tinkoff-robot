@@ -43,7 +43,9 @@ import {
   HaramiSignal, HaramiSignalConfig,
   BullishEngulfingSignal, BullishEngulfingSignalConfig,
   BearishEngulfingSignal, BearishEngulfingSignalConfig,
-  DojiSignal, DojiSignalConfig
+  DojiSignal, DojiSignalConfig,
+  ThreeWhiteSoldiersSignal, ThreeWhiteSoldiersSignalConfig,
+  ThreeBlackCrowsSignal, ThreeBlackCrowsSignalConfig
 } from './signals/candlestick-patterns/index.js';
 
 export interface StrategyConfig {
@@ -84,6 +86,8 @@ export interface StrategyConfig {
     bullishEngulfing?: BullishEngulfingSignalConfig;
     bearishEngulfing?: BearishEngulfingSignalConfig;
     doji?: DojiSignalConfig;
+    threeWhiteSoldiers?: ThreeWhiteSoldiersSignalConfig;
+    threeBlackCrows?: ThreeBlackCrowsSignalConfig;
   };
 }
 
@@ -131,7 +135,9 @@ export class Strategy extends RobotModule {
     harami: { signalClass: HaramiSignal, configKey: 'harami' },
     bullishEngulfing: { signalClass: BullishEngulfingSignal, configKey: 'bullishEngulfing' },
     bearishEngulfing: { signalClass: BearishEngulfingSignal, configKey: 'bearishEngulfing' },
-    doji: { signalClass: DojiSignal, configKey: 'doji' }
+    doji: { signalClass: DojiSignal, configKey: 'doji' },
+    threeWhiteSoldiers: { signalClass: ThreeWhiteSoldiersSignal, configKey: 'threeWhiteSoldiers' },
+    threeBlackCrows: { signalClass: ThreeBlackCrowsSignal, configKey: 'threeBlackCrows' }
   };
 
   constructor(robot: Robot, public config: StrategyConfig) {
