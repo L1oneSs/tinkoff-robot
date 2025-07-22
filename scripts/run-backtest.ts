@@ -516,7 +516,6 @@ async function runBacktest(
         }
       }
     } else if (sellSignal) {
-      // Аналогично для продажи
       for (const [signalName, result] of Object.entries(signalResults)) {
         if (result === 'sell' && sellSignalContext[signalName as keyof SignalContext]?.()) {
           const testContext = { ...sellSignalContext };
